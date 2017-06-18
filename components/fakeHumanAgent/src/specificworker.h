@@ -37,7 +37,7 @@ class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
 
- 
+
 struct TButton {
 bool up =false;
 bool down =false;
@@ -52,9 +52,9 @@ int valorgiro;
 
 
 public:
-  
+
 	void move();
-	
+
 	SpecificWorker(MapPrx& mprx);
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
@@ -72,15 +72,26 @@ public:
 	void edgeUpdated(const RoboCompAGMWorldModel::Edge &modification);
 	void symbolUpdated(const RoboCompAGMWorldModel::Node &modification);
 	void symbolsUpdated(const RoboCompAGMWorldModel::NodeSequence &modification);
+	std::string fakehuman;
+	std::string fakehumanmesh;
+	std::string humansymbol;
+	std::string meshpath;
+	int humancount;
+	int hnum;
+	int humannum;
+	int xpos,ypos,zpos; //controller
+	float theta;
+	int warpcontrol;
 
 public slots:
 	void compute();
 	//void receivedJoyStickEvent(int value, int type, int number);
-	
 	void upP ();
 	void upR ();
 	void downP ();
 	void downR ();
+	void jump();
+	void warp();
 	void rightP ();
 	void rightR ();
 	void leftP ();
@@ -88,9 +99,15 @@ public slots:
 	void rotar(int valor);
 	void giroP();
 	void giroR();
+    void rb1();
+    void rb2();
+    void rb3();
+		void rb4();
+		void rb5();
+
 
 private:
-  
+
 	RoboCompInnerModelManager::Pose3D pose;
 	InnerModel *innerModel;
 	std::string action;
@@ -99,19 +116,20 @@ private:
 	bool active;
 	bool setParametersAndPossibleActivation(const ParameterMap &prs, bool &reactivated);
 	void sendModificationProposal(AGMModel::SPtr &worldModel, AGMModel::SPtr &newModel);
-	
-	
+
+
 	void includeInRCIS();
 	void includeInAGM();
-	
-	
-	int32_t personSymbolId;
-	
+
+
+	int32_t personSymbolId[5];
+
 	QTime lastJoystickEvent;
 	QJoyStick *joystick;
 	float humanAdvVel, humanRotVel;
 	float humanRot;
+
+
 };
 
 #endif
-
