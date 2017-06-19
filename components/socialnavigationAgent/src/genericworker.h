@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2016 by YOUR NAME HERE
+ *    Copyright (C) 2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -31,6 +31,8 @@
 #include <TrajectoryRobot2D.h>
 #include <Logger.h>
 #include <OmniRobot.h>
+#include <GenericBase.h>
+#include <SocialNavigationGaussian.h>
 #include <agm.h>
 
 #define CHECK_PERIOD 5000
@@ -43,6 +45,8 @@ using namespace std;
 using namespace RoboCompTrajectoryRobot2D;
 using namespace RoboCompAGMWorldModel;
 using namespace RoboCompOmniRobot;
+using namespace RoboCompSocialNavigationGaussian;
+using namespace RoboCompGenericBase;
 using namespace RoboCompAGMExecutive;
 using namespace RoboCompPlanning;
 using namespace RoboCompLogger;
@@ -78,9 +82,10 @@ public:
 	bool isActive() { return active; }
 	
 
-	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 	LoggerPrx logger_proxy;
 	OmniRobotPrx omnirobot_proxy;
+	SocialNavigationGaussianPrx socialnavigationgaussian_proxy;
+	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 	AGMExecutivePrx agmexecutive_proxy;
 
 	virtual bool reloadConfigAgent() = 0;

@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2016 by YOUR NAME HERE
+ *    Copyright (C) 2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -71,6 +71,7 @@
 #include <Ice/Application.h>
 
 #include <rapplication/rapplication.h>
+#include <sigwatch/sigwatch.h>
 #include <qlog/qlog.h>
 
 #include "config.h"
@@ -86,6 +87,8 @@
 #include <TrajectoryRobot2D.h>
 #include <Logger.h>
 #include <OmniRobot.h>
+#include <GenericBase.h>
+#include <SocialNavigationGaussian.h>
 
 
 // User includes here
@@ -130,10 +133,14 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 	sigaddset(&sigs, SIGTERM);
 	sigprocmask(SIG_UNBLOCK, &sigs, 0);
 
-
+	UnixSignalWatcher sigwatch;
+	sigwatch.watchForSignal(SIGINT);
+	sigwatch.watchForSignal(SIGTERM);
+	QObject::connect(&sigwatch, SIGNAL(unixSignal(int)), &a, SLOT(quit()));
 
 	int status=EXIT_SUCCESS;
 
+	SocialNavigationGaussianPrx socialnavigationgaussian_proxy;
 	LoggerPrx logger_proxy;
 	OmniRobotPrx omnirobot_proxy;
 	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
@@ -141,6 +148,23 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 
 	string proxy, tmp;
 	initialize();
+
+
+	try
+	{
+		if (not GenericMonitor::configGetString(communicator(), prefix, "SocialNavigationGaussianProxy", proxy, ""))
+		{
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy SocialNavigationGaussianProxy\n";
+		}
+		socialnavigationgaussian_proxy = SocialNavigationGaussianPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+	}
+	catch(const Ice::Exception& ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
+		return EXIT_FAILURE;
+	}
+	rInfo("SocialNavigationGaussianProxy initialized Ok!");
+	mprx["SocialNavigationGaussianProxy"] = (::IceProxy::Ice::Object*)(&socialnavigationgaussian_proxy);//Remote server proxy creation example
 
 
 	try
@@ -303,6 +327,10 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 #endif
 		// Run QT Application Event Loop
 		a.exec();
+		
+		std::cout << "Unsubscribing topic: agmexecutivetopic " <<std::endl;
+		agmexecutivetopic_topic->unsubscribe( agmexecutivetopic );
+		
 		status = EXIT_SUCCESS;
 	}
 	catch(const Ice::Exception& ex)
