@@ -66,7 +66,7 @@ void PlannerPRM::initialize(Sampler* sampler_, const RoboCompCommonBehavior::Par
 			qFatal("Planner-Initialize. Aborting. Could not find enough free points to build de graph"); 
 		
 		qDebug() << __FUNCTION__ << "Creating with " << nPointsInGraph << "nodes and " << nNeighboursInGraph << "neighboors";
-    constructGraph(pointList, nNeighboursInGraph, maxDistToSearchmm, robotRadiusmm);  ///GET From IM ----------------------------------
+		constructGraph(pointList, nNeighboursInGraph, maxDistToSearchmm, robotRadiusmm);  ///GET From IM ----------------------------------
 		qDebug() << __FUNCTION__ << "Graph constructed with " << pointList.size() << "points";
 		writeGraphToFile(graphFileName);
 	}
@@ -280,6 +280,63 @@ bool PlannerPRM::planWithRRT(const QVec &origin, const QVec &target, QList<QVec>
  * @param targetVertex ...
  * @return void
  */
+
+bool PlannerPRM::updateGraph(LocalPolyLineList Polylines)
+{
+	bool modified = false;
+	for (auto poly:Polylines)
+	{
+		std::vector<Edge> listtoremoveE;
+		std::vector<Vertex> listtoremoveV;
+		QPolygonF qp;
+		for (auto p:poly)
+		{
+			qp << QPointF(p.x,p.z);
+		}
+		
+		//recorrer grafo
+		BGL_FORALL_VERTICES(v, graph, Graph)
+		{
+			if (qp.containsPoint(QPointF(graph[v].pose[0],graph[v].pose[2]),Qt::OddEvenFill))
+			{
+				listtoremoveV.push_back(v);
+			}	
+		}
+		BGL_FORALL_EDGES(e, graph, Graph)
+		{
+			QPointF s(graph[e.m_source].pose[0],graph[e.m_source].pose[2]);
+			QPointF s2 = s + QPointF(0.1, 0.1);
+			QPointF t(graph[e.m_target].pose[0],graph[e.m_target].pose[2]);
+			QPointF t2 = t + QPointF(0.1, 0.1);
+			QPolygonF qpe;
+			qpe << s;
+			qpe << t;
+			qpe << t2;
+			qpe << s2;
+			QRectF r = qp.intersected(qpe).boundingRect();
+			if (r.width()*r.height() > 0)
+			{
+				listtoremoveE.push_back(e);
+			}
+		}
+// 		qDebug()<<"Voy a borrar"<<listtoremove.size()<<"Vertices";
+// 		qDebug() <<  "Quedan" <<  boost::num_vertices(graph) << "vertices en el grafo";
+		for (auto e:listtoremoveE)
+		{	
+			boost::remove_edge(e, graph);	
+			modified = true;
+		//	qDebug()<<"listo";
+		}
+		for (auto v:listtoremoveV)
+		{
+			boost::clear_vertex(v, graph);
+			boost::remove_vertex(v, graph);
+			modified = true;
+		}
+	}
+	return modified;
+}
+
 void PlannerPRM::searchClosestPoints(const QVec& origin, const QVec& target, Vertex& originVertex, Vertex& targetVertex)
 {
 	qDebug() << __FUNCTION__ << "Searching from " << origin << "and " << target;

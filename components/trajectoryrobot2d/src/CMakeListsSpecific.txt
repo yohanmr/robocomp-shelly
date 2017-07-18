@@ -3,7 +3,7 @@ SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
   controller.cpp
-  qline2d.cpp
+  #qline2d.cpp
   elasticband.cpp
   innermodeldraw.cpp
   waypoints.cpp
@@ -16,6 +16,7 @@ SET ( SOURCES
   innerviewer.cpp
   graphdraw.cpp
   waypointsdraw.cpp
+  intersection.cpp
 )
 
 # Headers set
@@ -25,6 +26,7 @@ SET ( HEADERS
   plannerprm.h
   plannerompl.h
   innerviewer.h
+  safepolylist.h
 )
 
 #find_package(OMPL)

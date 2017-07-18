@@ -100,6 +100,87 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 };
 
 
+void SpecificWorker::updateObstacles(LocalPolyLineList polylines)
+{
+	qDebug() << __FUNCTION__ << "updateObstacles";
+	//Borrar todos los newpolyline_obs_X que existan del innermodel y del innermodel viewer
+	
+	//Crear obs por cada polinenaf
+	for (int i=0; i<100; i++)
+	{
+		QString cadena = QString("polyline_obs_") + QString::number(i,10);
+		//printf("puntero a %s: %p\n", cadena.toStdString().c_str(), viewer->innerModel->getNode(cadena));
+
+		qDebug() << __FUNCTION__ <<"intentamos borrar "<<cadena;
+		if (innerModel->getNode(cadena))
+				innerModel->removeNode(cadena);
+		
+		if (not InnerModelDraw::removeObject(viewer->innerViewer, cadena) )
+		{
+			printf("removeObject devuelve falso\n");
+			break;
+ 		}
+	}
+
+		
+	int count = 0;
+	for (auto poly:polylines)
+	{
+		auto previousPoint = poly[poly.size()-1];
+		
+		for (auto currentPoint:poly)
+		{
+			
+			QString cadena = QString("polyline_obs_")+QString::number(count,10);
+			qDebug() << __FUNCTION__ << "nombre"<<cadena;
+			QVec ppoint = QVec::vec3(previousPoint.x, 1000, previousPoint.z);
+			QVec cpoint = QVec::vec3(currentPoint.x, 1000, currentPoint.z);
+			QVec center = (cpoint + ppoint).operator*(0.5);
+			
+			QVec normal = (cpoint-ppoint);
+			float dist=normal.norm2();	
+			float temp = normal(2);
+			normal(2) = normal(0);
+			normal(0) = -temp;
+			
+ 			InnerModelDraw::addPlane_ignoreExisting(viewer->innerViewer, cadena, QString("world"), center, normal,  QString("#FFFF00"), QVec::vec3(dist,2000,90));
+		
+			//////////////////////////////////////SE METE LA PARED EN EL INNER///////////////////////////////////
+			if (innerModel->getNode(cadena))
+			{
+				innerModel->removeNode(cadena);
+			//	qDebug() << __FUNCTION__ << "borrado " << cadena;
+			}
+			
+	
+			InnerModelNode *parent = innerModel->getNode(QString("world"));			
+			if (parent == NULL)
+				printf("%s: parent not exists\n", __FUNCTION__);
+			else
+			{			
+				InnerModelPlane *plane;
+				try
+				{
+					if (innerModel->getNode(cadena))
+						qDebug() << "SHIT!!!!!!!!!!!!!!!!!!!!!!!!";
+					plane  = innerModel->newPlane(cadena, parent, QString("#FFFF00"), dist, 2000, 90, 1, normal(0), normal(1), normal(2), center(0), center(1), center(2), true);
+
+					parent->addChild(plane); 
+				}
+				catch(QString es)
+				{ qDebug() << "EXCEPCION" << es;}
+
+			}
+			
+	
+			////////////////////////////////////////////////////////////////////////////////////
+			count++;
+			previousPoint=currentPoint;
+		}
+	}
+}
+		
+
 /**
  * @brief Main execution loop. Checks if there is an active target
  * @return void
@@ -108,6 +189,9 @@ void SpecificWorker::compute()
 {
 	static QTime reloj = QTime::currentTime();
 
+
+	flagLaser = false;
+	
 	// Check for connection failure
 	if (updateInnerModel(innerModel, tState) == false)
 	{
@@ -117,7 +201,31 @@ void SpecificWorker::compute()
 		tState.setDescription("Disconnected");
 		currentTarget.state = CurrentTarget::State::DISCONNECTED;
 	}
+	
+	if (newPolyline)
+	{
+		qDebug()<<"Nueva polilinea. Actualizamos grafo";
+		if ( plannerPRM.updateGraph(safePolyList.read()) == true)
+		{
+			updateObstacles(safePolyList.read());
+			qDebug()<<"Se ha modificado el grafo";
+			#ifdef USE_QTGUI
+				graphdraw.draw(plannerPRM, viewer);
+			#endif
 		
+			sampler.initialize(innerModel, params);
+		}
+		
+		newPolyline = false;
+		
+	//	printf("%p %p\n", innerModel, sampler.innerModelSampler);
+	}
+	//	printf("%p %p\n", innerModel, sampler.innerModelSampler);
+	
+
+	
+	if (road.isBlocked()) currentTarget.setState(CurrentTarget::State::BLOCKED);
+	
 	switch (currentTarget.state)
 	{
 		case CurrentTarget::State::STOP:
@@ -128,20 +236,30 @@ void SpecificWorker::compute()
 			break;
 		case CurrentTarget::State::GOTO:
 			timer.setInterval(Period);
-			//qDebug() << __FUNCTION__ << "GOTO:" << "Robot at:" << innerModel->transform6D("world", "robot") << "Target:" << currentTarget.getFullPose();
+			qDebug() << __FUNCTION__ << "GOTO:" << "Robot at:" << innerModel->transform6D("world", "robot") << "Target:" << currentTarget.getFullPose();
 			gotoCommand(innerModel, currentTarget, tState, road, laserData);
 			break;
 		case CurrentTarget::State::SETHEADING:
 			setHeadingCommand(innerModel, currentTarget.getRotation().y(), currentTarget, tState, road);
 			break;		
 		case CurrentTarget::State::BLOCKED:
-				road.update();
-				elasticband.update(innerModel, road, laserData, currentTarget);
-				if( road.isBlocked() == false)
-					currentTarget.setState(CurrentTarget::State::GOTO);
-				else
-					qDebug() << __FUNCTION__ << "Blocked";
+			
+		//	controller->stopTheRobot(omnirobot_proxy);
+			road.update();		
+			elasticband.update(innerModel, road, laserData, currentTarget, safePolyList);	
+			if( road.isBlocked() == true)
+			{
+				
+				qDebug() << __FUNCTION__ << "Blocked. Calling replanning";
+				controller->stopTheRobot(omnirobot_proxy);
+				road.setRequiresReplanning(true);
+				//road.setBlocked(true);
+			}
+	
+			currentTarget.setState(CurrentTarget::State::GOTO);	
+			
 			break;
+		
 		case CurrentTarget::State::GOBACKWARDS:
 			goBackwardsCommand(innerModel, currentTargetBack, currentTarget, tState, road);
 			break;
@@ -176,13 +294,15 @@ void SpecificWorker::compute()
 		case CurrentTarget::State::IDLE:
 			timer.setInterval(700);
 			tState.setDescription("Waiting new target");
-			qDebug() << __FUNCTION__ << "Computed period" << reloj.elapsed()  << "ms. State. Robot at:" << innerModel->transform6D("world", "robot");
+			
+			//////////////DESCOMENTAR///////////////////
+			//qDebug() << __FUNCTION__ << "Computed period" << reloj.elapsed()  << "ms. State. Robot at:" << innerModel->transform6D("world", "robot");
 			//currentTarget.setState(CurrentTarget::State::LEARNING);
 			break;
 	}
 	
 	worker_params_mutex->lock();
-		//save framerate in params
+// 		//save framerate in params
 		worker_params["frameRate"].value = std::to_string(reloj.restart()/1000.f);
 	worker_params_mutex->unlock();
 }
@@ -262,26 +382,37 @@ SpecificWorker::gotoCommand(InnerModel *innerModel, CurrentTarget &target, Traje
 		return true;
 	}
 	//Check if road is blocked and the robot is moving forward.
- 	if (myRoad.isBlocked() == true and bState.advVz > 10)		//Road BLOCKED, go to BLOCKED state and wait it the obstacle moves PARAMS
- 	{
-		controller->stopTheRobot(omnirobot_proxy);
- 		target.setState(CurrentTarget::State::BLOCKED);
-		state.setState("BLOCKED");
-		return false;
- 	}
- 	else
+//  	if (myRoad.isBlocked() == true and bState.advVz > 10)		//Road BLOCKED, go to BLOCKED state and wait it the obstacle moves PARAMS
+//  	{
+// 		controller->stopTheRobot(omnirobot_proxy);
+//  		target.setState(CurrentTarget::State::BLOCKED);
+// 		state.setState("BLOCKED");
+// 		return false;
+//  	}
+// 		else
+// 		{
+// 			target.setState(CurrentTarget::State::GOTO);
+// 			state.setState("EXECUTING");
+// 		}
+		
+	if (myRoad.isBlocked() == true )	//Road BLOCKED, go to BLOCKED state and wait it the obstacle moves PARAMS
 	{
-		target.setState(CurrentTarget::State::GOTO);
-		state.setState("EXECUTING");
+		controller->stopTheRobot(omnirobot_proxy);
+		target.setWithoutPlan(true);
+		myRoad.setBlocked(false);
 	}
 		
-
+	qDebug() << __FUNCTION__ << "GOTO:" << "Robot at:" << innerModel->transform6D("world", "robot") << "Target:" << currentTarget.getFullPose();
 	// Get here when robot is stuck
-// 	if(myRoad.requiresReplanning == true)
-// 	{
-// 	 		//qDebug() << __FUNCTION__ << "STUCK, PLANNING REQUIRED";
-// 	 		//computePlan(innerModel);
-// 	}
+	
+	
+	if (myRoad.getRequiresReplanning() == true)
+	{
+		qDebug() << __FUNCTION__ << "STUCK, PLANNING REQUIRED";
+// 		QVec localT = target.getTranslation();
+// 		plannerPRM.computePath(localT, innerModel);
+		target.setWithoutPlan(true);
+	}
 	
 	//////////////////////////////////////////
 	// Check if there is a plan for the target
@@ -307,7 +438,7 @@ SpecificWorker::gotoCommand(InnerModel *innerModel, CurrentTarget &target, Traje
 		//Init road   REMOVE TRASH FROM HERE
 		myRoad.reset();
 		myRoad.readRoadFromList(plannerPRM.getPath());
-		myRoad.requiresReplanning = false;
+		myRoad.setRequiresReplanning(false);
 		myRoad.computeDistancesToNext();
 		myRoad.startRoad();
 		state.setPlanningTime(reloj.elapsed());
@@ -317,8 +448,10 @@ SpecificWorker::gotoCommand(InnerModel *innerModel, CurrentTarget &target, Traje
 	///////////////////////////////////
 	// Update the band
 	/////////////////////////////////
-	elasticband.update(innerModel, myRoad, laserData, target);
+	
+	elasticband.update(innerModel, myRoad, laserData, target, safePolyList);
 
+	//qFatal("aqui");
 	///////////////////////////////////
 	// compute all measures relating the robot to the road
 	/////////////////////////////////
@@ -431,7 +564,7 @@ bool SpecificWorker::goBackwardsCommand(InnerModel *innerModel, CurrentTarget &c
 	if ((error < MAX_POSITIONING_ERROR) or (errorIncreasing == true))        //TASK IS FINISHED
 	{
 		controller->stopTheRobot(omnirobot_proxy);
-		myRoad.requiresReplanning = true;
+		myRoad.setRequiresReplanning(true);
 		currentT.setWithoutPlan(true);
 		currentT.setState(CurrentTarget::State::GOTO);
 		errorAnt = std::numeric_limits<float>::max();
@@ -658,6 +791,50 @@ float SpecificWorker::goBackwards(const TargetPose &target)
 	return 0;
 }
 
+void SpecificWorker::setHumanSpace(const PolyLineList& polyList)
+{
+  
+	qDebug()<<"La polilinea ha llegado";
+	safePolyList.write(polyList);
+	newPolyline=true;
+  
+}
+
+TLaserData SpecificWorker::getLaserData()
+{
+//	qDebug()<<"Me piden el laser";
+
+	return laserData;
+}
+TLaserData SpecificWorker::getLaserAndBStateData(TBaseState& bState)
+{
+	//qDebug() << " hola desde getlaserdata";
+	while( flagLaser == false)
+	bState = this->bState;
+	return laserData;
+}
+
+
+LaserConfData SpecificWorker::getLaserConfData()
+{
+	
+	LaserConfData lc;
+	lc.maxMeasures = 100;
+    lc.maxDegrees = 240;
+    lc.maxRange = 30000;
+    lc.minRange = 100;
+    lc.iniRange = -120;
+    lc.endRange = 120;
+    lc.cluster = 0;
+    lc.sampleRate = 30;
+    lc.angleRes = 2.40000009537;
+    lc.angleIni = -120.0;
+    lc.driver = "RCIS";
+    lc.device = "laser";
+
+	return lc;
+}
+
 /////////////////////
 // In development
 /////////////////////
@@ -728,6 +905,27 @@ void SpecificWorker::mapBasedTarget(const NavigationParameterMap &parameters)
  * @param inner InnerModel that is to be updated
  * @return bool
  */
+void SpecificWorker::fichero(TLaserData laser, string path){
+	ofstream fichero(path, ofstream::out);
+	for (auto l:laser){
+		fichero<< l.angle << " " <<l.dist<< endl;
+	}
+	fichero.close();
+}
+void SpecificWorker::ficheroP(LocalPolyLineList polylines, string path, InnerModel *innermodel){
+	ofstream fichero(path, ofstream::out);
+	for (auto p:polylines){
+		for (auto l:p){
+			QVec point_poli = innermodel->transform("laser", (QVec::vec3(l.x, 0, l.z)), "world");
+			fichero<< point_poli.x() << " " <<point_poli.z()<< endl;
+			
+		}
+	}
+	fichero.close();
+}
+
+
+
 bool SpecificWorker::updateInnerModel(InnerModel *inner, TrajectoryState &state)
 {
 	try
@@ -742,9 +940,23 @@ bool SpecificWorker::updateInnerModel(InnerModel *inner, TrajectoryState &state)
 	{
 		qDebug() << __FUNCTION__ << "Can't connect to OmniRobot proxy. Retrying...";
 		return false;
-	}	
+	}
+	
+	
 	try
-	{	laserData = laser_proxy->getLaserData();	}
+	{
+	//	printf("Escribiendo a laserantes\n");
+		laserData = laser_proxy->getLaserData();
+ 	//	fichero(laserData,"laserantes.txt");
+	
+	//	QTime tiempo = QTime::currentTime();
+		laserData = elasticband.unionpoligonos(laserData, safePolyList, inner);
+	//	cout << "tardamos (ms) " << tiempo.elapsed() << endl;
+	//	
+ 	//	fichero(laserData,"laserdespues.txt");
+	//	ficheroP(safePolyList.read(),"poly.txt", inner); 
+	//	printf("Escribiendo a laserdespues\n");
+ 	}
 	catch (const Ice::Exception &ex)
 	{
 		qDebug() << __FUNCTION__ << "Can't connect to Laser proxy. Retrying...";
@@ -759,6 +971,8 @@ bool SpecificWorker::updateInnerModel(InnerModel *inner, TrajectoryState &state)
 		currentTarget.state = CurrentTarget::State::IDLE;
 		timer.setInterval(Period);
 	}
+	
+	flagLaser =true;
 	return true;
 }
 
@@ -791,6 +1005,7 @@ float SpecificWorker::angmMPI(float angle)
 	
 	return angle;
 	}
+	
 
 /////////////////////////////////////////////////////////////////////////////
 //// DRAWING METHODS
@@ -800,16 +1015,14 @@ void SpecificWorker::drawTarget(const QVec &target)
 {
 #ifdef USE_QTGUI
 	//Draw target as green box
-	InnerModelDraw::addPlane_ignoreExisting(viewer->innerViewer, "target", "world", QVec::vec3(target(0), 5, target(2)),
-	                                        QVec::vec3(1, 0, 0), "#00FF00", QVec::vec3(100, 100, 100));
+	InnerModelDraw::addPlane_ignoreExisting(viewer->innerViewer, "target", "world", QVec::vec3(target(0), 5, target(2)), QVec::vec3(1, 0, 0), "#00FF00", QVec::vec3(100, 100, 100));
 #endif
 }
 
 void SpecificWorker::drawGreenBoxOnTarget(const QVec &target)
 {
 #ifdef USE_QTGUI
-	InnerModelDraw::addPlane_ignoreExisting(viewer->innerViewer, "target", "world", QVec::vec3(target(0), 1800, target(2)),
-	                                        QVec::vec3(1, 0, 0), "#00FA00", QVec::vec3(150, 150, 150));
+	InnerModelDraw::addPlane_ignoreExisting(viewer->innerViewer, "target", "world", QVec::vec3(target(0), 1800, target(2)), QVec::vec3(1, 0, 0), "#00FA00", QVec::vec3(150, 150, 150));
 #endif
 
 }
@@ -865,17 +1078,16 @@ bool SpecificWorker::removeNode(const QString &item)
  * @param r ...
  * @return void
  */
-void SpecificWorker::addPlane(QString item, QString parentS, QString path, QVec scale, QVec t, QVec r)
-{
-	InnerModelTransform *parent = dynamic_cast<InnerModelTransform *>(innerModel->getNode(parentS));
-	if (innerModel->getNode(item) != NULL)
-		removeNode(item);
-	InnerModelMesh *mesh = innerModel->newMesh(item, parent, path, scale(0), scale(1), scale(2), 0, t(0), t(1), t(2),
-	                                           r(0), r(1), r(2));
-	mesh->setScale(scale(0), scale(1), scale(2));
-	parent->addChild(mesh);
-}
-
+// void SpecificWorker::addPlane(QString item, QString parentS, QString path, QVec scale, QVec t, QVec r)
+// {
+// 	InnerModelTransform *parent = dynamic_cast<InnerModelTransform *>(innerModel->getNode(parentS));
+// 	if (innerModel->getNode(item) != NULL)
+// 		removeNode(item);
+// 	InnerModelMesh *mesh = innerModel->newMesh(item, parent, path, scale(0), scale(1), scale(2), 0, t(0), t(1), t(2), r(0), r(1), r(2));
+// 	mesh->setScale(scale(0), scale(1), scale(2));
+// 	parent->addChild(mesh);
+// }
+// 
 
 bool SpecificWorker::insertObstacle()
 {
@@ -910,11 +1122,6 @@ RoboCompCommonBehavior::ParameterList SpecificWorker::getWorkerParams()
 	return worker_params;
 }
 
-
-void SpecificWorker::setHumanSpace(const PolyLineList &pllist)
-{
-	
-}
 
 //CHECK PARAMETERS
 // 	QVec target = current.getTranslation();
@@ -1182,4 +1389,3 @@ void SpecificWorker::setHumanSpace(const PolyLineList &pllist)
 // 	}
 // 	return true;
 // }
-

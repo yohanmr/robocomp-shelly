@@ -34,30 +34,27 @@ InnerModelDraw::~InnerModelDraw()
 
 void InnerModelDraw::addMesh_ignoreExisting(InnerModelViewer *innerViewer, QString item, QString parent, QVec t, QVec r, QString path, QVec scale)
 {
-	
-/*	InnerModelMesh(QString id_, QString meshPath_, float scale, RenderingModes render_, float tx_, float ty_, float tz_, float rx_, float ry_, float rz_, bool collidable,
-	innerVisual->n
-	imNode->addChild(mesh);
-	try
+	QMutexLocker ml(innerViewer->mutex);
+	InnerModelTransform *tparent = dynamic_cast<InnerModelTransform*>(innerViewer->innerModel->getNode(parent));
+	InnerModel *im = innerViewer->innerModel;
+
+	if (im->getNode(item) != NULL)
 	{
-		//qDebug() << __FILE__ << __FUNCTION__ << "parent" << parent << "mesh" << a;
-		innerViewer->innerModel->addMesh(a.toStdString(),parent.toStdString(), m);
-	} 
-	catch (const RoboCompInnerModelManager::InnerModelManagerError &e )
-	{
-		try
-		{
-			innerViewer->innerModel->removeNode(a.toStdString());
-			innerViewer->innerModel->addMesh(a.toStdString(),parent.toStdString(), m);
-		}
-		catch(QString err )
-		{
-		printf("%s:%s:%d: Exception: %s\n", __FILE__, __FUNCTION__, __LINE__, err.toStdString().c_str());
-		throw;
-		}
+		removeNode(innerViewer, item);
 	}
-*/
-	
+
+	InnerModelMesh *mesh = im->newMesh (
+		item,
+		tparent,
+		path,
+		scale(0), scale(1), scale(2),
+		0,
+		t(0), t(1), t(2),
+		r(0), r(1), r(2));
+	mesh->setScale(scale(0), scale(1), scale(2));
+	tparent->addChild(mesh);
+
+	innerViewer->recursiveConstructor(mesh, innerViewer->mts[tparent->id], innerViewer->mts, innerViewer->meshHash);
 }
 
 bool InnerModelDraw::addTransform_ignoreExisting(InnerModelViewer *innerViewer, QString item, QString base /*, parametros aqui*/)
@@ -129,13 +126,14 @@ bool InnerModelDraw::addPlane_notExisting(InnerModelViewer *innerViewer, const Q
 		printf("%s: parent not exists\n", __FUNCTION__);
 		return false;
 	}
-	InnerModelPlane *plane = innerViewer->innerModel->newPlane(item, parent, texture, size(0), size(1), size(2), 1, n(0), n(1), n(2), p(0), p(1), p(2));
-	parent->addChild(plane);
-
+	InnerModelPlane *plane = innerViewer->innerModel->newPlane(item, parent, texture, size(0), size(1), size(2), 1, n(0), n(1), n(2), p(0), p(1), p(2), true);
+	parent->addChild(plane); 
+// 	innerViewer->innerModel->save(item+".xml");
 	innerViewer->recursiveConstructor(plane, innerViewer->mts[parent->id], innerViewer->mts, innerViewer->meshHash);
-		
+
 	return true;
 }
+
 
 void InnerModelDraw::drawLine(InnerModelViewer *innerViewer, QString name, QString parent, const QVec& normalVector, float length, float width, QString texture)
 {
@@ -146,16 +144,18 @@ void InnerModelDraw::drawLine(InnerModelViewer *innerViewer, QString name, QStri
 
 void InnerModelDraw::drawLine2Points(InnerModelViewer *innerViewer, QString name, QString parent, const QVec& p1, const QVec& p2, QString texture)
 {
-		
 	InnerModelDraw::addPlane_ignoreExisting(innerViewer, name, parent, QVec::vec3(0,0,0), QVec::vec3(0,1,0), texture, QVec::vec3(15, (p1-p2).norm2(), 15));
-		
 }
 
 
-void InnerModelDraw::removeObject(InnerModelViewer *innerViewer, QString name)
+bool InnerModelDraw::removeObject(InnerModelViewer *innerViewer, QString name)
 {
 	if (innerViewer->innerModel->getNode(name))
-		removeNode(innerViewer, name);	
+	{
+		removeNode(innerViewer, name);
+		return true;
+	}
+	return false;
 }
 
 

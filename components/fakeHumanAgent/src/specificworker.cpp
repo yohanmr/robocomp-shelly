@@ -43,6 +43,12 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
         humansymbol="person1";
         meshpath="/home/robocomp/robocomp/components/robocomp-shelly/files/mesh/human0";
         setWindowTitle("Humanfake");
+				meshsize[0]=12;
+				meshsize[1]=23;
+				meshsize[2]=12;
+				meshsize[3]=23;
+				meshsize[4]=8;
+
 
 
 //	lastJoystickEvent = QTime::currentTime();
@@ -56,7 +62,7 @@ SpecificWorker::~SpecificWorker()
 
 }
 
-void SpecificWorker::includeInRCIS()
+void SpecificWorker::includeInRCIS(int i)
 {
 
         printf("includeInRCIS begins\n");
@@ -76,7 +82,7 @@ void SpecificWorker::includeInRCIS()
                   mesh.pose.rx = 1.57079632679;
                   mesh.pose.ry = 0;
                   mesh.pose.rz = 3.1415926535;
-                  mesh.scaleX = mesh.scaleY = mesh.scaleZ = 12;
+                  mesh.scaleX = mesh.scaleY = mesh.scaleZ = meshsize[i];
                   mesh.render = 0;
                   //mesh.meshPath = "/home/robocomp/robocomp/files/osgModels/Gualzru/Gualzru.osg";
                   mesh.meshPath = meshpath;
@@ -96,31 +102,7 @@ void SpecificWorker::includeInRCIS()
 void SpecificWorker::includeInAGM()
 {
 
-
-
-          printf("includeInAGM begins\n");
-          int idx=0;
-
-          while ((personSymbolId[0] = worldModel->getIdentifierByType(humansymbol, idx++)) != -1)
-          {
-                  printf("%d %d\n", idx, personSymbolId[0]);
-                  if (idx > 5) exit(0);
-                  if (worldModel->getSymbolByIdentifier(personSymbolId[0])->getAttribute("imName") == fakehuman)
-                  {
-                          printf("found %d!!\n", personSymbolId[0]);
-                          break;
-                  }
-
-          }
-          if (personSymbolId[0] != -1)
-          {
-                  printf("Fake person already in the AGM model\n");
-                  return;
-          }
-					else
-					std::cout<<"Adding to AGM model";
-
-          AGMModel::SPtr newModel(new AGMModel(worldModel));
+					 AGMModel::SPtr newModel(new AGMModel(worldModel));
 					for(int i=0;i<hnum;i++)
 					{
 						fakehuman="fakeperson";
@@ -133,51 +115,84 @@ void SpecificWorker::includeInAGM()
 						meshpath.append(std::to_string(humancount));
 						meshpath.append(".3ds");
 						humancount++;
-	          // Symbolic part
-	          AGMModelSymbol::SPtr person =   newModel->newSymbol(humansymbol);
-	          personSymbolId[i] = person->identifier;
-	          printf("Got personSymbolId: %d\n", personSymbolId[i]);
-	          person->setAttribute("imName", fakehuman);
-	          person->setAttribute("imType", "transform");
-	          AGMModelSymbol::SPtr personSt = newModel->newSymbol("personSt");
-	          printf("person %d status %d\n", person->identifier, personSt->identifier);
-
-	          newModel->addEdge(person, personSt, "hasStatus");
-	          newModel->addEdge(person, personSt, "noReach");
-	          newModel->addEdge(person, personSt, "person");
-
-	          newModel->addEdgeByIdentifiers(person->identifier, 3, "in");
+						std::cout<<fakehuman<<"\n";
 
 
-	          // Geometric part
-	          std::map<std::string, std::string> edgeRTAtrs;
-	          edgeRTAtrs["tx"] = std::to_string(xpos);
-	          edgeRTAtrs["ty"] = "0";
-	          edgeRTAtrs["tz"] = std::to_string(zpos);
-	          edgeRTAtrs["rx"] = "0";
-	          edgeRTAtrs["ry"] = "0";
-	          edgeRTAtrs["rz"] = "0";
-	          newModel->addEdgeByIdentifiers(100, person->identifier, "RT", edgeRTAtrs);
+	          printf("includeInAGM begins\n");
+	          int idx=0;
+
+	          while ((personSymbolId[i] = worldModel->getIdentifierByType(humansymbol, idx++)) != -1)
+	          {
+	                  printf("%d %d\n", idx, personSymbolId[i]);
+	                  if (idx > 5) exit(0);
+	                  if (worldModel->getSymbolByIdentifier(personSymbolId[i])->getAttribute("imName") == fakehuman)
+	                  {
+	                          printf("found %d!!\n", personSymbolId[i]);
+	                          break;
+	                  }
+
+	          }
+	          if (personSymbolId[i] != -1)
+	          {
+	                  printf("Fake person already in the AGM model\n");
+										if(i<hnum-1)
+	                  continue;
+										else
+										return;
+	          }
+						else
+						std::cout<<"Adding to AGM model";
 
 
-	          AGMModelSymbol::SPtr personMesh = newModel->newSymbol("mesh");
-	          printf("personMesh %d\n", personMesh->identifier);
-	          personMesh->setAttribute("collidable", "false");
-	          personMesh->setAttribute("imName", fakehumanmesh);
-	          personMesh->setAttribute("imType", "mesh");
-	          personMesh->setAttribute("path", meshpath);
-	          personMesh->setAttribute("render", "NormalRendering");
-	          personMesh->setAttribute("scalex", "12");
-	          personMesh->setAttribute("scaley", "12");
-	          personMesh->setAttribute("scalez", "12");
 
-	          edgeRTAtrs["tx"] = "0";
-	          edgeRTAtrs["ty"] = "0";
-	          edgeRTAtrs["tz"] = "0";
-	          edgeRTAtrs["rx"] = "1.570796326794";
-	          edgeRTAtrs["ry"] = "0";
-	          edgeRTAtrs["rz"] = "3.1415926535";
-	          newModel->addEdge(person, personMesh, "RT", edgeRTAtrs);
+
+		          // Symbolic part
+		          AGMModelSymbol::SPtr person =   newModel->newSymbol(humansymbol);
+		          personSymbolId[i] = person->identifier;
+		          printf("Got personSymbolId: %d\n", personSymbolId[i]);
+		          person->setAttribute("imName", fakehuman);
+		          person->setAttribute("imType", "transform");
+		          AGMModelSymbol::SPtr personSt = newModel->newSymbol("personSt");
+		          printf("person %d status %d\n", person->identifier, personSt->identifier);
+
+		          newModel->addEdge(person, personSt, "hasStatus");
+		          newModel->addEdge(person, personSt, "noReach");
+		          newModel->addEdge(person, personSt, "person");
+
+		          newModel->addEdgeByIdentifiers(person->identifier, 3, "in");
+
+
+		          // Geometric part
+		          std::map<std::string, std::string> edgeRTAtrs;
+		          edgeRTAtrs["tx"] = std::to_string(xpos);
+		          edgeRTAtrs["ty"] = "0";
+		          edgeRTAtrs["tz"] = std::to_string(zpos);
+		          edgeRTAtrs["rx"] = "0";
+		          edgeRTAtrs["ry"] = "0";
+		          edgeRTAtrs["rz"] = "0";
+		          newModel->addEdgeByIdentifiers(100, person->identifier, "RT", edgeRTAtrs);
+
+
+		          AGMModelSymbol::SPtr personMesh = newModel->newSymbol("mesh");
+		          printf("personMesh %d\n", personMesh->identifier);
+		          personMesh->setAttribute("collidable", "false");
+		          personMesh->setAttribute("imName", fakehumanmesh);
+		          personMesh->setAttribute("imType", "mesh");
+		          personMesh->setAttribute("path", meshpath);
+		          personMesh->setAttribute("render", "NormalRendering");
+		          personMesh->setAttribute("scalex", std::to_string(meshsize[i]));
+		          personMesh->setAttribute("scaley", std::to_string(meshsize[i]));
+		          personMesh->setAttribute("scalez", std::to_string(meshsize[i]));
+
+		          edgeRTAtrs["tx"] = "0";
+		          edgeRTAtrs["ty"] = "0";
+		          edgeRTAtrs["tz"] = "0";
+		          edgeRTAtrs["rx"] = "1.570796326794";
+		          edgeRTAtrs["ry"] = "0";
+		          edgeRTAtrs["rz"] = "3.1415926535";
+		          newModel->addEdge(person, personMesh, "RT", edgeRTAtrs);
+							xpos=xpos;
+							zpos=zpos-400;
 					}
 
 
@@ -263,27 +278,17 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 					meshpath.append(".3ds");
 					std::cout<<fakehuman<<"\n";
 	        // Include person in RCIS
-	        includeInRCIS();
-					fakehumanmesh="fakepersonMesh";
-					fakehumanmesh.append(std::to_string(humancount));
-					humansymbol="person";
-          humansymbol.append(std::to_string(humancount));
-
+	        includeInRCIS(i);
 					xpos=xpos;
 					zpos=zpos-400;
+
+
 					humancount++;
 
 				}
 				humancount=1;
-				fakehuman="fakeperson";
-				fakehuman.append(std::to_string(humancount));
-				fakehumanmesh="fakepersonMesh";
-				fakehumanmesh.append(std::to_string(humancount));
-				humansymbol="person";
-				humansymbol.append(std::to_string(humancount));
-				meshpath="/home/robocomp/robocomp/components/robocomp-shelly/files/mesh/human0";
-				meshpath.append(std::to_string(humancount));
-				meshpath.append(".3ds");
+                                xpos=3500;
+                                zpos=1500;
 				// Include person in AGM
 				includeInAGM();
         // Joystick

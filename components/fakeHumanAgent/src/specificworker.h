@@ -82,7 +82,7 @@ public:
 	int xpos,ypos,zpos; //controller
 	float theta;
 	int warpcontrol;
-
+	int meshsize[5];
 public slots:
 	void compute();
 	//void receivedJoyStickEvent(int value, int type, int number);
@@ -118,7 +118,7 @@ private:
 	void sendModificationProposal(AGMModel::SPtr &worldModel, AGMModel::SPtr &newModel);
 
 
-	void includeInRCIS();
+	void includeInRCIS(int i);
 	void includeInAGM();
 
 

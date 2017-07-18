@@ -110,40 +110,40 @@ static QTime reloj = QTime::currentTime();
 
 	//	print();
 	//	printRobotState(innerModel);
-	qDebug() << "time "<< reloj.restart();
-	qDebug() << "*********************************************";
-	qDebug() << "current point: "<<(int)getIndexOfCurrentPoint()+1 << " size: "<<(int)this->size();
-	qDebug() << "robot distance target: "<< getRobotDistanceToTarget() << "thershold: "<<threshold;
-	qDebug() << "robot distance variation " <<getRobotDistanceVariationToTarget();
+	qDebug() <<__FUNCTION__ << "time "<< reloj.restart();
+	qDebug() <<__FUNCTION__ << "*********************************************";
+	qDebug() <<__FUNCTION__ << "current point: "<<(int)getIndexOfCurrentPoint()+1 << " size: "<<(int)this->size();
+	qDebug() <<__FUNCTION__ << "robot distance target: "<< getRobotDistanceToTarget() << "thershold: "<<threshold;
+	qDebug() <<__FUNCTION__ << "robot distance variation " <<getRobotDistanceVariationToTarget();
 
 
 	if (((((int) getIndexOfCurrentPoint()+1 == (int) this->size()) and  (getRobotDistanceToTarget() < threshold))) or
 	    (((int) getIndexOfCurrentPoint()+1 == (int) this->size()) and (getRobotDistanceVariationToTarget() > 0)))
 	{
 		qDebug() << __FUNCTION__ << "ROAD: FINISHED";
-		qDebug() << "	reason: " << ((int) getIndexOfCurrentPoint()+1 == (int) this->size()) << "index " << getIndexOfCurrentPoint();
-		qDebug() << "	reason: " << (getRobotDistanceToTarget() < threshold) << " distance: "<<getRobotDistanceToTarget() << getRobotDistanceVariationToTarget();
+		qDebug() <<__FUNCTION__ << "	reason: " << ((int) getIndexOfCurrentPoint()+1 == (int) this->size()) << "index " << getIndexOfCurrentPoint();
+		qDebug() <<__FUNCTION__ << "	reason: " << (getRobotDistanceToTarget() < threshold) << " distance: "<<getRobotDistanceToTarget() << getRobotDistanceVariationToTarget();
 		setFinished(true);
 	}
-  else
+    else
 	{
 		///////////////////////////////////////////
 		//Check for blocked road
 		///////////////////////////////////////////
-		qDebug() << __FUNCTION__ << "ROAD: Robot distance to last visible" << getRobotDistanceToLastVisible();
+		qDebug() << __FUNCTION__ << "ROAD: Robot distance to last visible" << getRobotDistanceToLastVisible() << (getIterToLastVisiblePoint() < this->end());
 		//print();
-		if( getRobotDistanceToLastVisible() < 150  and   			//PARAMS
+		if( getRobotDistanceToLastVisible() < 250  and   			//PARAMS
 			  getIterToLastVisiblePoint() < this->end())
-{
-		qDebug()<<"BLOCKED";
-			qDebug()<<"distanceToLastVisible"<<getRobotDistanceToLastVisible();
+		{
+			qDebug() <<__FUNCTION__ <<"BLOCKED" << "distanceToLastVisible" << getRobotDistanceToLastVisible();
 			setBlocked(true);
-}
+			
+		}	
 		else
 			setBlocked(false);
 	}
 	
-	printRobotState(innerModel);
+	//printRobotState(innerModel);
 	//print();
 }
 

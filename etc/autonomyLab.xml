@@ -25,7 +25,7 @@
 		<transform id="pared6" tx="4418.209473" tz="245" ty="950" >
 			<plane id="muro6" nx="221.809814" nz="40.510742" size="240,1900,9"  texture="#000088" />
 		</transform>
-		<transform id="pared22" tx="2160.31897" tz="29.063904" ty="950" ry="0.1" >
+		<transform id="pared22" tx="1660.31897" tz="-469.715904" ty="950" ry="0.1" >
 			<plane id="muro22" nx="-204.67395" nz="-40.031494" size="208.552023055,1900,9"  texture="#000088" />
 		</transform>
 
@@ -39,11 +39,11 @@
 			</transform>-->
 
 			<!-- ROOM A -->
-			<transform id="pared0" tx="-91.899048" tz="2066.808899" ty="950" >
-				<plane id="muro0" nx="-3992.720092" nz="-111.82544" size="3994.28575118,1900,9"  texture="#880000" />
+			<transform id="pared0" tx="-591.899048" tz="1816.808899" ty="950" >
+				<plane id="muro0" nx="-3992.720092" nz="-111.82544" size="4494.28575118,1900,9"  texture="#880000" />
 			</transform>
-			<transform id="pared1" tx="3235.375366" tz="4200.796875" ty="950" >
-				<plane id="muro1" nx="-275.25586" nz="6766.374268" size="6771.97065285,1900,9"  texture="#880000" />
+			<transform id="pared1" tx="2985.375366" tz="4200.796875" ty="950" >
+				<plane id="muro1" nx="-275.25586" nz="6766.374268" size="7271.97065285,1900,9"  texture="#880000" />
 			</transform>
 			<transform id="pared2" tx="6695.069336" tz="2831.4042355" ty="950" >
 				<plane id="muro2" nx="3014.040161" nz="153.013672" size="3017.92168155,1900,9"  texture="#880000" />
@@ -57,7 +57,7 @@
 			<transform id="pared5" tx="5226.416748" tz="411.503479" ty="950" >
 				<plane id="muro5" nx="90.779174" nz="-1657.885254" size="1660.36874635,1900,9"  texture="#880000" />
 			</transform>
-			<transform id="pared23" tx="1060.7264405" tz="101.164795" ty="950" >
+			<transform id="pared23" tx="560.7264405" tz="-399.164795" ty="950" >
 				<plane id="muro23" nx="60.472168" nz="-2159.153565" size="2190,1900,9"  texture="#880000" />
 			</transform>
 
@@ -165,11 +165,11 @@
 			<transform id="1pared4" tx="-1038.0255125" tz="-1739.7702635" ty="950" ry="0.025" >
 				<plane id="1muro4" nx="125.657227" nz="-2037.280517" size="2041,1900"  texture="#008800" />
 			</transform>
-			<transform id="pared20" tx="-2030.214111" tz="-980.0798645" ty="950" >
-				<plane id="muro20" nx="-1542.252381" nz="-43.194336" size="1600,1900,9"  texture="#008800" />
+			<transform id="pared20" tx="-2030.214111" tz="-1230.0798645" ty="950" >
+				<plane id="muro20" nx="-1542.252381" nz="-43.194336" size="1100,1900,9"  texture="#008800" />
 			</transform>
-			<transform id="pared21" tx="64.261719" tz="-141.1133725" ty="950" >
-				<plane id="muro21" nx="-135.680603" nz="4232.145996" size="4234.32036548,1900,9"  texture="#008800" />
+			<transform id="pared21" tx="-186.261719" tz="-641.1133725" ty="950" >
+				<plane id="muro21" nx="-135.680603" nz="4232.145996" size="3734.32036548,1900,9"  texture="#008800" />
 			</transform>
 
 

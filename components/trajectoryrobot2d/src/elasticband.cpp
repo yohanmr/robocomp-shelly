@@ -14,7 +14,8 @@
  * limitations under the License.
  * 
  */
-
+#include <cmath>
+#include <vector>
 #include "elasticband.h"
 
 ElasticBand::ElasticBand()
@@ -74,12 +75,13 @@ ElasticBand::~ElasticBand()
 }
 
 bool ElasticBand::update(InnerModel *innermodel, WayPoints &road, const RoboCompLaser::TLaserData &laserData,
-                         const CurrentTarget &currentTarget, uint iter)
+                         const CurrentTarget &currentTarget, SafePolyList &safePolyList, uint iter)
 {
+	qDebug()<<"ELASTIC BAND UPDATE";
 	//qDebug() << __FILE__ << __FUNCTION__ << "road size"<<  road.size();
 	if (road.isFinished() == true)
 		return false;
-
+	
 	/////////////////////////////////////////////
 	//Tags all points in the road ar visible or blocked, depending on laser visibility. Only visible points are processed in this iteration
 	/////////////////////////////////////////////
@@ -161,6 +163,138 @@ bool ElasticBand::shortCut(InnerModel *innermodel, WayPoints &road, const RoboCo
  * @param road ...
  * @return void
  */
+/*
+RoboCompLaser::TLaserData ElasticBand::unionpoligonos(RoboCompLaser::TLaserData laserData, SafePolyList &safePolyList, InnerModel *innermodel)
+{
+	RoboCompLaser::TLaserData laserCombined; 
+	laserCombined = laserData;
+	
+	// For each polyline
+	LocalPolyLineList l = safePolyList.read(); 
+	
+
+	for (auto polyline : l)
+	{
+		float min = std::numeric_limits<float>::max();
+		float max = std::numeric_limits<float>::min(); 
+		
+		for (auto polylinePoint: polyline.p)
+		{
+			LocalPointPol lPol;
+			QVec pInLaser = innermodel->transform("laser", QVec::vec3(polylinePoint.x, 0, polylinePoint.z), "world");
+			lPol.dist  = sqrt(pInLaser.x()*pInLaser.x() + pInLaser.z()*pInLaser.z());
+			lPol.angle = atan2(pInLaser.x(), pInLaser.z());	
+			if( lPol.angle < min ) min = lPol.angle;
+			if( lPol.angle > max ) max = lPol.angle;
+		}
+
+		for (auto &laserSample: laserCombined)
+		{
+			if (laserSample.angle >= min and laserSample.angle <= max and fabs(max-min)<3.14) 
+			{
+				auto previousPoint = polyline.p[polyline.p.size()-1];
+				QVec previousPointInLaser = innermodel->transform("laser", (QVec::vec3(previousPoint.x, 0, previousPoint.z)), "world");
+				float pDist  = sqrt(previousPointInLaser.x()*previousPointInLaser.x() + previousPointInLaser.z()*previousPointInLaser.z());
+				float pAngle = atan2(previousPointInLaser.x(), previousPointInLaser.z());
+				// For each polyline's point
+				for (auto polylinePoint: polyline.p)
+				{
+					QVec currentPointInLaser = innermodel->transform("laser", (QVec::vec3(polylinePoint.x, 0, polylinePoint.z)), "world");
+					float cDist  = sqrt(currentPointInLaser.x()*currentPointInLaser.x() + currentPointInLaser.z()*currentPointInLaser.z());
+					float cAngle = atan2(currentPointInLaser.x(), currentPointInLaser.z());
+
+					const float m = std::min<float>(cAngle, pAngle);
+					const float M = std::max<float>(cAngle, pAngle);
+					//printf("angulo: %f   p:%f  c:%f\n", laserSample.angle, cAngle, pAngle);
+					if (laserSample.angle >= m and laserSample.angle <= M and fabs(M-m)<3.14)
+					{
+					//	printf("dentro\n");
+						float mean = (cDist + pDist) / 2.;
+						
+						if (mean<laserSample.dist) laserSample.dist = mean;
+					}
+					pDist = cDist;
+					pAngle = cAngle;
+				}
+			}
+		}
+	}
+	return laserCombined;
+} */
+
+RoboCompLaser::TLaserData ElasticBand::unionpoligonos(RoboCompLaser::TLaserData laserData, SafePolyList &safePolyList, InnerModel *innermodel)
+{
+//   QLine2D laserline(QVec::vec2(0,0), QVec::vec2(4,0));
+//   QVec intersection= laserline.intersectionPoint(QLine2D(QVec::vec2(2,2),QVec::vec2(2,-2)));
+//   qDebug()<<intersection;
+  
+	RoboCompLaser::TLaserData laserCombined; 
+	laserCombined = laserData;
+	
+	// For each polyline
+	LocalPolyLineList l = safePolyList.read(); 
+	
+	//Primero se pasa la polilinea a polares para sacar el minimo y el maximo
+	for (auto polyline : l)
+	{
+		float min = std::numeric_limits<float>::max();
+		float max = std::numeric_limits<float>::min(); 
+		
+		for (auto polylinePoint: polyline)
+		{
+			LocalPointPol lPol;
+			QVec pInLaser = innermodel->transform("laser", QVec::vec3(polylinePoint.x, 0, polylinePoint.z), "world");
+			lPol.dist  = sqrt(pInLaser.x()*pInLaser.x() + pInLaser.z()*pInLaser.z());
+			lPol.angle = atan2(pInLaser.x(), pInLaser.z());	
+			if( lPol.angle < min ) min = lPol.angle;
+			if( lPol.angle > max ) max = lPol.angle;
+		}
+	
+	//Recorremos todas las muestras del laser
+		for (auto &laserSample: laserCombined)
+		{ //Compruebo que la muestra del laser corta a la polilinea. Es decir si esta comprendida entre el maximo y el minimo de antes
+			if (laserSample.angle >= min and laserSample.angle <= max and fabs(max-min)<3.14) 
+			{
+				QVec lasercart =innermodel->laserTo("laser", "laser", laserSample.dist, laserSample.angle);
+				
+				//recta que une el 0,0 con el punto del laser
+				QLine2D laserline(QVec::vec2(0,0), QVec::vec2(lasercart.x(), lasercart.z()));
+				
+				auto previousPoint = polyline[polyline.size()-1];
+				QVec previousPointInLaser = innermodel->transform("laser", (QVec::vec3(previousPoint.x, 0, previousPoint.z)), "world");	
+				// For each polyline's point
+				
+				for (auto polylinePoint: polyline)
+				{
+					QVec currentPointInLaser = innermodel->transform("laser", (QVec::vec3(polylinePoint.x, 0, polylinePoint.z)), "world");
+					QVec intersection= laserline.intersectionPoint(QLine2D(QVec::vec2(previousPointInLaser.x(),previousPointInLaser.z()),QVec::vec2(currentPointInLaser.x(),currentPointInLaser.z())));
+					
+					//Una vez sacada la interseccion se comprueba que esta dentro del segmento. Para ello se calculan los angulos de los puntos actual y previo
+					float pAngle = atan2(previousPointInLaser.x(), previousPointInLaser.z());
+					float cAngle = atan2(currentPointInLaser.x(), currentPointInLaser.z());
+					
+					const float m = std::min<float>(cAngle, pAngle);
+					const float M = std::max<float>(cAngle, pAngle);
+					//printf("angulo: %f   p:%f  c:%f\n", laserSample.angle, cAngle, pAngle);
+					
+					if (laserSample.angle >= m and laserSample.angle <= M and fabs(M-m)<3.14)
+					{
+						float distint=sqrt (pow(intersection.x(),2)+pow(intersection.y(),2));					
+						if (distint<laserSample.dist) laserSample.dist= distint;
+					}		
+						
+
+					
+				previousPointInLaser=currentPointInLaser;
+				
+				}
+			}
+		}
+	}
+	return laserCombined;
+} 
+
+
 bool ElasticBand::addPoints(WayPoints &road, const CurrentTarget &currentTarget)
 {
 	if( road.size() < 2) 
