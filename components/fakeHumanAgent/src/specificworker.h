@@ -82,8 +82,22 @@ public:
 	int xpos,ypos,zpos; //controller
 	float theta;
 	int warpcontrol;
+	int velcounter;
 	int meshsize[5];
+	int autocounter[5];
+	int autox[5];
+	int inix[5];
+	int autoz[5];
+	int iniz[5];
+	int gox[5];
+	int goz[5];
+	float gorot[5];
+	int xdire[5];
+	int zdire[5];
+	int xpath[5];
+	int zpath[5];
 public slots:
+	void counterVel();
 	void compute();
 	//void receivedJoyStickEvent(int value, int type, int number);
 	void upP ();
@@ -104,6 +118,12 @@ public slots:
     void rb3();
 		void rb4();
 		void rb5();
+		void changeVel();
+		void autoCheck();
+		void autoPilot();
+
+
+
 
 
 private:
@@ -126,7 +146,7 @@ private:
 
 	QTime lastJoystickEvent;
 	QJoyStick *joystick;
-	float humanAdvVel, humanRotVel;
+	float humanAdvVel[5], humanRotVel;
 	float humanRot;
 
 

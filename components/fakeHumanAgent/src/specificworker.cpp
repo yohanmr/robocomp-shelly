@@ -18,6 +18,7 @@
  */
 #include "specificworker.h"
 #include <qt4/QtGui/qdial.h>
+#include <math.h>
 
 
 
@@ -26,13 +27,21 @@
 */
 SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 {
+				for(int i=0;i<5;i++)
+				{
+					autox[i]=60000;
+					autoz[i]=60000;
+					autocounter[i]=0;
+					humanAdvVel[i] = 50;
+			  }
+				velcounter=0;
 				warpcontrol=0;
         active = false;
         worldModel = AGMModel::SPtr(new AGMModel());
         worldModel->name = "worldModel";
         innerModel = new InnerModel();
         humancount=1;
-        humanAdvVel = 50;
+
         humanRot = 0;
         humannum=1;
         xpos=3500;
@@ -48,6 +57,7 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 				meshsize[2]=12;
 				meshsize[3]=23;
 				meshsize[4]=8;
+
 
 
 
@@ -152,6 +162,7 @@ void SpecificWorker::includeInAGM()
 		          printf("Got personSymbolId: %d\n", personSymbolId[i]);
 		          person->setAttribute("imName", fakehuman);
 		          person->setAttribute("imType", "transform");
+							person->setAttribute("velocity",std::to_string(humanAdvVel[i]));
 		          AGMModelSymbol::SPtr personSt = newModel->newSymbol("personSt");
 		          printf("person %d status %d\n", person->identifier, personSt->identifier);
 
@@ -335,20 +346,194 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
         giro->QAbstractSlider::setMaximum (360);
       	//Get Jump Positions
 				connect (Send,SIGNAL(clicked()),this,SLOT(warp()));
-
+				//Change velocity
+				connect (changeVelocity,SIGNAL(clicked()),this,SLOT(counterVel()));
         //RADIOBUTTON
         connect (radioButton_1,SIGNAL(clicked()),this,SLOT(rb1()));
         connect (radioButton_2,SIGNAL(clicked()),this,SLOT(rb2()));
         connect (radioButton_3,SIGNAL(clicked()),this,SLOT(rb3()));
 				connect (radioButton_4,SIGNAL(clicked()),this,SLOT(rb4()));
 				connect (radioButton_5,SIGNAL(clicked()),this,SLOT(rb5()));
+				//autoPilot
+				connect(auto_1,SIGNAL(clicked()),this,SLOT(autoCheck()));
 
 
         return true;
 }
+	void SpecificWorker::autoPilot()
+	{
+			for(int i=0;i<5;i++)
+			{
+			if (autocounter[i]==1)
+			{
+			if (autox[i]!=60000)
+			{
+				if(autoz[i]>iniz[i])
+				zdire[i]=1;
+				else
+				zdire[i]=-1;
+				if(autox[i]>inix[i])
+				xdire[i]=1;
+				else
+				xdire[i]=-1;
+				fakehuman="fakeperson";
+				fakehuman.append(std::to_string(i+1));
+				gorot[i]=atan2(abs(autoz[i]-iniz[i]),abs(autox[i]-inix[i]));
+				if(autoz[i]>iniz[i]&&autox[i]>inix[i])
+				{
+					humanRot=1.57-gorot[i];
+					gox[i]=humanAdvVel[i]*cos(gorot[i]);
+					goz[i]=humanAdvVel[i]*sin(gorot[i]);
+					xpath[i]=xpath[i]+gox[i];
+					zpath[i]=zpath[i]+goz[i];
+				}
+				else if(autoz[i]<iniz[i]&&autox[i]>inix[i])
+				{
+					humanRot=1.57+gorot[i];
+					gox[i]=humanAdvVel[i]*cos(gorot[i]);
+					goz[i]=-humanAdvVel[i]*sin(gorot[i]);
+					xpath[i]=xpath[i]+gox[i];
+					zpath[i]=zpath[i]+goz[i];
+				}
+				else if(autoz[i]>iniz[i]&&autox[i]<inix[i])
+				{
+					humanRot=4.71+gorot[i];
+					gox[i]=-humanAdvVel[i]*cos(gorot[i]);
+					goz[i]=humanAdvVel[i]*sin(gorot[i]);
+					xpath[i]=xpath[i]+gox[i];
+					zpath[i]=zpath[i]+goz[i];
+				}
+				else if(autoz[i]<iniz[i]&&autox[i]<inix[i])
+				{
+					humanRot=4.71-gorot[i];
+					gox[i]=-humanAdvVel[i]*cos(gorot[i]);
+					goz[i]=-humanAdvVel[i]*sin(gorot[i]);
+					xpath[i]=xpath[i]+gox[i];
+					zpath[i]=zpath[i]+goz[i];
+				}
+				else if(autoz[i]==iniz[i])
+				{	zdire[i]=2;
+					if(xdire[i]==1)
+					{
+						xpath[i]=xpath[i]+humanAdvVel[i];
+						humanRot=1.57;
+					}
+					else
+					{
+						xpath[i]=xpath[i]-humanAdvVel[i];
+						humanRot=4.71;
+					}
+				}
+				else if(autox[i]==inix[i])
+				{
+					xdire[i]=2;
+					if(zdire[i]==1)
+					{
+						zpath[i]=zpath[i]+humanAdvVel[i];
+						humanRot=0;
+					}
+					else
+					{
+						zpath[i]=zpath[i]-humanAdvVel[i];
+						humanRot=3.14;
+					}
+				}
+
+
+
+				if((xdire[i]==1&&xpath[i]>=autox[i])||(xdire[i]==-1&&xpath[i]<=autox[i])||(zdire[i]==1&&zpath[i]>=autoz[i])||(zdire[i]==-1&&zpath[i]<=autoz[i]))
+				{
+
+					int tmp;
+					tmp=autox[i];
+					autox[i]=inix[i];
+					inix[i]=tmp;
+					tmp=autoz[i];
+					autoz[i]=iniz[i];
+					iniz[i]=tmp;
+				}
+				else
+				{
+
+					pose.x = xpath[i];
+					pose.y = 0;
+					pose.z = zpath[i];
+					pose.rx = 0;
+					pose.ry =humanRot;
+					pose.rz = 0;
+
+
+					innermodelmanager_proxy->setPoseFromParent(fakehuman, pose);
+
+
+					AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[i], "RT");
+					AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[i], "RT");
+					edgeRT.attributes["tx"] = float2str(xpath[i]);
+					edgeRT.attributes["ty"] = float2str(0);
+					edgeRT.attributes["tz"] = float2str(zpath[i]);
+					edgeRT.attributes["rx"] = "0";
+					edgeRT.attributes["ry"] = float2str(humanRot);
+					edgeRT.attributes["rz"] = "0";
+
+
+					AGMMisc::publishEdgeUpdate(edgeRT, agmexecutive_proxy);
+			}
+		}
+		}
+		}
+	}
+
+	void SpecificWorker::autoCheck()
+	{
+		if (autocounter[humannum-1]==0)
+			{
+				autocounter[humannum-1]=1;
+				inix[humannum-1]=pose.x;
+				iniz[humannum-1]=pose.z;
+				xpath[humannum-1]=pose.x;
+				zpath[humannum-1]=pose.z;
+				qDebug()<<"AutoPilot ON";
+				qDebug()<<"Initail x:"<<inix[humannum-1]<<" Inital z:"<<iniz[humannum-1];
+
+			}
+		else
+		{
+			autox[humannum-1]=60000;
+			autoz[humannum-1]=60000;
+			autocounter[humannum-1]=0;
+			qDebug()<<"AutoPilot OFF";
+		}
+	}
+	void SpecificWorker::counterVel()
+	{
+		velcounter=1;
+	}
+	void SpecificWorker::changeVel()
+	{
+		velcounter=0;
+		fakehuman="fakeperson";
+		fakehuman.append(std::to_string(humannum));
+		humanAdvVel[humannum-1]=(velocity->text()).toInt();
+		velocity->clear();
+		AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[humannum-1], "RT");
+		AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[humannum-1], "RT");
+		edgeRT.attributes["velocity"] = float2str(humanAdvVel[humannum-1]);
+		AGMMisc::publishEdgeUpdate(edgeRT, agmexecutive_proxy);
+	}
 //warp
 void SpecificWorker::warp(){
+	if(autocounter[humannum-1]==1)
+	{
+		autox[humannum-1]=(X_POS->text()).toInt();
+		autoz[humannum-1]=(Z_POS->text()).toInt();
+		qDebug()<<"Final X:"<<autox[humannum-1]<<" Final Z:"<<autoz[humannum-1];
+		X_POS->clear();
+		Z_POS->clear();
+		Theta->clear();
+	}
+	else
 	warpcontrol=1;
+
 }
 //jump
 void SpecificWorker::jump(){
@@ -358,6 +543,9 @@ void SpecificWorker::jump(){
 	xpos=(X_POS->text()).toInt();
 	zpos=(Z_POS->text()).toInt();
 	theta=(Theta->text()).toFloat();
+	X_POS->clear();
+	Z_POS->clear();
+	Theta->clear();
 	std::cout<<xpos<<endl;
 
 	pose.x = xpos;
@@ -431,23 +619,48 @@ void SpecificWorker::giroR(){
 }
 //RADIOBUTTON
 void SpecificWorker::rb1(){
-        humannum=1;
+				humannum=1;
+				if(autocounter[humannum-1]==0)
+				auto_1->setChecked(false);
+				else
+				auto_1->setChecked(true);
+
         qDebug()<<humannum;
 }
 void SpecificWorker::rb2(){
-        humannum=2;
+				humannum=2;
+				if(autocounter[humannum-1]==0)
+				auto_1->setChecked(false);
+				else
+				auto_1->setChecked(true);
+
         qDebug()<<humannum;
 }
 void SpecificWorker::rb3(){
-        humannum=3;
+				humannum=3;
+				if(autocounter[humannum-1]==0)
+				auto_1->setChecked(false);
+				else
+				auto_1->setChecked(true);
+
         qDebug()<<humannum;
 }
 void SpecificWorker::rb4(){
-        humannum=4;
+				humannum=4;
+				if(autocounter[humannum-1]==0)
+				auto_1->setChecked(false);
+				else
+				auto_1->setChecked(true);
+
         qDebug()<<humannum;
 }
 void SpecificWorker::rb5(){
-        humannum=5;
+	  		humannum=5;
+				if(autocounter[humannum-1]==0)
+				auto_1->setChecked(false);
+				else
+				auto_1->setChecked(true);
+
         qDebug()<<humannum;
 }
 
@@ -463,28 +676,28 @@ void SpecificWorker::move (){
     if (tbutton.up==true){
                 coordInItem.x = 0;
                 coordInItem.y = 0;
-                coordInItem.z =humanAdvVel;
+                coordInItem.z =humanAdvVel[humannum];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
 
          }
          else if (tbutton.down==true){
                 coordInItem.x = 0;
                 coordInItem.y = 0;
-                coordInItem.z =-humanAdvVel;
+                coordInItem.z =-humanAdvVel[humannum];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
          else if (tbutton.right==true){
                 coordInItem.z = 0;
                 coordInItem.y = 0;
-                coordInItem.x =humanAdvVel;
+                coordInItem.x =humanAdvVel[humannum];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
          else if (tbutton.left==true){
                 coordInItem.z = 0;
                 coordInItem.y = 0;
-                coordInItem.x =-humanAdvVel;
+                coordInItem.x =-humanAdvVel[humannum];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
@@ -536,17 +749,35 @@ void SpecificWorker::compute()
         try
       	{
 
-        	if ((tbutton.up==true)||(tbutton.down==true)||(tbutton.right==true)||(tbutton.left==true)||(tbutton.rotacion==true))
-          {
-						if(hnum>=humannum)
-        	  move();
-        	}
-					if(warpcontrol==1)
+
+					if(autocounter[humannum-1]==1)
 					{
-						if(hnum>=humannum)
-						jump();
+						;
 					}
+					else
+					{
+	        	if ((tbutton.up==true)||(tbutton.down==true)||(tbutton.right==true)||(tbutton.left==true)||(tbutton.rotacion==true))
+	          {
+							if(hnum>=humannum)
+	        	  move();
+	        	}
+						if(warpcontrol==1)
+						{
+							if(hnum>=humannum)
+							jump();
+						}
+						if(velcounter==1)
+						{
+							if(hnum>=humannum)
+							changeVel();
+
+						}
+					}
+
+					autoPilot();
+
       	}
+
       	catch(...)
       	{
       		std::cout<<"booboo";

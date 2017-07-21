@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>546</width>
-    <height>286</height>
+    <height>313</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,7 +79,7 @@
      <x>310</x>
      <y>30</y>
      <width>127</width>
-     <height>171</height>
+     <height>182</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -115,13 +115,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>230</y>
      <width>468</width>
-     <height>24</height>
+     <height>26</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -130,7 +130,7 @@
       <item>
        <widget class="QRadioButton" name="radioButton_1">
         <property name="text">
-         <string>Human 1</string>
+         <string>Human &amp;1</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -140,14 +140,14 @@
       <item>
        <widget class="QRadioButton" name="radioButton_2">
         <property name="text">
-         <string>Human 2</string>
+         <string>Human &amp;2</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButton_3">
         <property name="text">
-         <string>Human 3</string>
+         <string>Human &amp;3</string>
         </property>
        </widget>
       </item>
@@ -156,26 +156,63 @@
     <item>
      <widget class="QRadioButton" name="radioButton_4">
       <property name="text">
-       <string>Human 4</string>
+       <string>Human &amp;4</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QRadioButton" name="radioButton_5">
       <property name="text">
-       <string>Human 5</string>
+       <string>Human &amp;5</string>
       </property>
      </widget>
     </item>
    </layout>
   </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>270</y>
+     <width>231</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="QCheckBox" name="auto_1">
+      <property name="text">
+       <string>Auto</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="velocity"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="changeVelocity">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>270</y>
+     <width>88</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Change</string>
+   </property>
+  </widget>
+  <zorder>layoutWidget</zorder>
   <zorder>layoutWidget</zorder>
   <zorder>layoutWidget</zorder>
   <zorder>Send</zorder>
   <zorder>layoutWidget</zorder>
-  <zorder>radioButton_4</zorder>
-  <zorder>radioButton_5</zorder>
-  <zorder>radioButton_3</zorder>
+  <zorder>changeVelocity</zorder>
  </widget>
  <tabstops>
   <tabstop>left</tabstop>

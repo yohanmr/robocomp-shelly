@@ -262,7 +262,7 @@ void WayPoints::computeDistancesToNext()
 
 QLine2D WayPoints::getRobotZAxis(InnerModel *innerModel)
 {
-	Q_ASSERT(currentPoint + 1 < road.size() and road.size() > 0);
+        Q_ASSERT(indexOfCurrentPoint + 1 < road.size() and road.size() > 0);
 
 	QVec robotPos = innerModel->transform("world", QVec::zeros(3), "robot");
 	//QVec robot2DPos = QVec::vec2( innerModel->getBaseX(), innerModel->getBaseZ());
