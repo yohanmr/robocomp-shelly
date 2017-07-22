@@ -162,7 +162,7 @@ void SpecificWorker::includeInAGM()
 		          printf("Got personSymbolId: %d\n", personSymbolId[i]);
 		          person->setAttribute("imName", fakehuman);
 		          person->setAttribute("imType", "transform");
-							person->setAttribute("velocity",std::to_string(humanAdvVel[i]));
+							person->setAttribute("velocity",float2str(0));
 		          AGMModelSymbol::SPtr personSt = newModel->newSymbol("personSt");
 		          printf("person %d status %d\n", person->identifier, personSt->identifier);
 
@@ -501,6 +501,12 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 			autox[humannum-1]=60000;
 			autoz[humannum-1]=60000;
 			autocounter[humannum-1]=0;
+			fakehuman="fakeperson";
+			fakehuman.append(std::to_string(humannum));
+			AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[humannum-1], "RT");
+			AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[humannum-1], "RT");
+			edgeRT.attributes["velocity"] = float2str(0);
+			AGMMisc::publishEdgeUpdate(edgeRT, agmexecutive_proxy);
 			qDebug()<<"AutoPilot OFF";
 		}
 	}
@@ -511,14 +517,9 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 	void SpecificWorker::changeVel()
 	{
 		velcounter=0;
-		fakehuman="fakeperson";
-		fakehuman.append(std::to_string(humannum));
-		humanAdvVel[humannum-1]=(velocity->text()).toInt();
+		humanAdvVel[humannum-1]=(velocity->text()).toFloat();
 		velocity->clear();
-		AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[humannum-1], "RT");
-		AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[humannum-1], "RT");
-		edgeRT.attributes["velocity"] = float2str(humanAdvVel[humannum-1]);
-		AGMMisc::publishEdgeUpdate(edgeRT, agmexecutive_proxy);
+
 	}
 //warp
 void SpecificWorker::warp(){
@@ -530,6 +531,12 @@ void SpecificWorker::warp(){
 		X_POS->clear();
 		Z_POS->clear();
 		Theta->clear();
+		fakehuman="fakeperson";
+		fakehuman.append(std::to_string(humannum));
+		AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[humannum-1], "RT");
+		AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[humannum-1], "RT");
+		edgeRT.attributes["velocity"] = float2str(humanAdvVel[humannum-1]);
+		AGMMisc::publishEdgeUpdate(edgeRT, agmexecutive_proxy);
 	}
 	else
 	warpcontrol=1;
