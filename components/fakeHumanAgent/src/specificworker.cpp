@@ -181,6 +181,7 @@ void SpecificWorker::includeInAGM()
 		          edgeRTAtrs["rx"] = "0";
 		          edgeRTAtrs["ry"] = "0";
 		          edgeRTAtrs["rz"] = "0";
+							edgeRTAtrs["velocity"]="0";
 		          newModel->addEdgeByIdentifiers(100, person->identifier, "RT", edgeRTAtrs);
 
 
@@ -516,9 +517,11 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 	}
 	void SpecificWorker::changeVel()
 	{
+
 		velcounter=0;
 		humanAdvVel[humannum-1]=(velocity->text()).toFloat();
 		velocity->clear();
+		qDebug()<<"Velocity Changed to:"<<humanAdvVel[humannum-1];
 
 	}
 //warp
@@ -683,28 +686,28 @@ void SpecificWorker::move (){
     if (tbutton.up==true){
                 coordInItem.x = 0;
                 coordInItem.y = 0;
-                coordInItem.z =humanAdvVel[humannum];
+                coordInItem.z =humanAdvVel[humannum-1];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
 
          }
          else if (tbutton.down==true){
                 coordInItem.x = 0;
                 coordInItem.y = 0;
-                coordInItem.z =-humanAdvVel[humannum];
+                coordInItem.z =-humanAdvVel[humannum-1];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
          else if (tbutton.right==true){
                 coordInItem.z = 0;
                 coordInItem.y = 0;
-                coordInItem.x =humanAdvVel[humannum];
+                coordInItem.x =humanAdvVel[humannum-1];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
          else if (tbutton.left==true){
                 coordInItem.z = 0;
                 coordInItem.y = 0;
-                coordInItem.x =-humanAdvVel[humannum];
+                coordInItem.x =-humanAdvVel[humannum-1];
                 innermodelmanager_proxy->transform("root", fakehuman, coordInItem, coordInBase);
          }
 
