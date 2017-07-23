@@ -53,8 +53,3 @@ void AGMExecutiveTopicI::symbolsUpdated(const RoboCompAGMWorldModel::NodeSequenc
 	worker->symbolsUpdated(modifications);
 }
 
-
-
-
-
-

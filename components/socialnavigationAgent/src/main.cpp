@@ -140,48 +140,14 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 
 	int status=EXIT_SUCCESS;
 
-	SocialNavigationGaussianPrx socialnavigationgaussian_proxy;
+	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 	LoggerPrx logger_proxy;
 	OmniRobotPrx omnirobot_proxy;
-	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
+	SocialNavigationGaussianPrx socialnavigationgaussian_proxy;
 	AGMExecutivePrx agmexecutive_proxy;
 
 	string proxy, tmp;
 	initialize();
-
-
-	try
-	{
-		if (not GenericMonitor::configGetString(communicator(), prefix, "SocialNavigationGaussianProxy", proxy, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy SocialNavigationGaussianProxy\n";
-		}
-		socialnavigationgaussian_proxy = SocialNavigationGaussianPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
-	}
-	catch(const Ice::Exception& ex)
-	{
-		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
-		return EXIT_FAILURE;
-	}
-	rInfo("SocialNavigationGaussianProxy initialized Ok!");
-	mprx["SocialNavigationGaussianProxy"] = (::IceProxy::Ice::Object*)(&socialnavigationgaussian_proxy);//Remote server proxy creation example
-
-
-	try
-	{
-		if (not GenericMonitor::configGetString(communicator(), prefix, "OmniRobotProxy", proxy, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy OmniRobotProxy\n";
-		}
-		omnirobot_proxy = OmniRobotPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
-	}
-	catch(const Ice::Exception& ex)
-	{
-		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
-		return EXIT_FAILURE;
-	}
-	rInfo("OmniRobotProxy initialized Ok!");
-	mprx["OmniRobotProxy"] = (::IceProxy::Ice::Object*)(&omnirobot_proxy);//Remote server proxy creation example
 
 
 	try
@@ -203,6 +169,40 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 
 	try
 	{
+		if (not GenericMonitor::configGetString(communicator(), prefix, "OmniRobotProxy", proxy, ""))
+		{
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy OmniRobotProxy\n";
+		}
+		omnirobot_proxy = OmniRobotPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+	}
+	catch(const Ice::Exception& ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
+		return EXIT_FAILURE;
+	}
+	rInfo("OmniRobotProxy initialized Ok!");
+	mprx["OmniRobotProxy"] = (::IceProxy::Ice::Object*)(&omnirobot_proxy);//Remote server proxy creation example
+
+
+	try
+	{
+		if (not GenericMonitor::configGetString(communicator(), prefix, "SocialNavigationGaussianProxy", proxy, ""))
+		{
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy SocialNavigationGaussianProxy\n";
+		}
+		socialnavigationgaussian_proxy = SocialNavigationGaussianPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+	}
+	catch(const Ice::Exception& ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
+		return EXIT_FAILURE;
+	}
+	rInfo("SocialNavigationGaussianProxy initialized Ok!");
+	mprx["SocialNavigationGaussianProxy"] = (::IceProxy::Ice::Object*)(&socialnavigationgaussian_proxy);//Remote server proxy creation example
+
+
+	try
+	{
 		if (not GenericMonitor::configGetString(communicator(), prefix, "AGMExecutiveProxy", proxy, ""))
 		{
 			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy AGMExecutiveProxy\n";
@@ -217,7 +217,16 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 	rInfo("AGMExecutiveProxy initialized Ok!");
 	mprx["AGMExecutiveProxy"] = (::IceProxy::Ice::Object*)(&agmexecutive_proxy);//Remote server proxy creation example
 
-	IceStorm::TopicManagerPrx topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));
+	IceStorm::TopicManagerPrx topicManager;
+	try
+	{
+		topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));
+	}
+	catch (const Ice::Exception &ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: STORM not running: " << ex << endl;
+		return EXIT_FAILURE;
+	}
 
 	IceStorm::TopicPrx logger_topic;
 	while (!logger_topic)
@@ -252,12 +261,12 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 
 	if ( !monitor->isRunning() )
 		return status;
-	
+
 	while (!monitor->ready)
 	{
 		usleep(10000);
 	}
-	
+
 	try
 	{
 		// Server adapter creation and publication
@@ -327,10 +336,10 @@ int ::socialnavigationAgent::run(int argc, char* argv[])
 #endif
 		// Run QT Application Event Loop
 		a.exec();
-		
+
 		std::cout << "Unsubscribing topic: agmexecutivetopic " <<std::endl;
 		agmexecutivetopic_topic->unsubscribe( agmexecutivetopic );
-		
+
 		status = EXIT_SUCCESS;
 	}
 	catch(const Ice::Exception& ex)
@@ -387,4 +396,3 @@ int main(int argc, char* argv[])
 
 	return app.main(argc, argv, configFile.c_str());
 }
-

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 by YOUR NAME HERE
+# Copyright (C) 2017 by YOUR NAME HERE
 #
 #    This file is part of RoboComp
 #
@@ -28,7 +28,7 @@ except:
 if len(ROBOCOMP)<1:
 	print 'ROBOCOMP environment variable not set! Exiting.'
 	sys.exit()
-	
+
 
 preStr = "-I/opt/robocomp/interfaces/ -I"+ROBOCOMP+"/interfaces/ --all /opt/robocomp/interfaces/"
 
@@ -39,10 +39,7 @@ class SocialNavigationGaussianI(SocialNavigationGaussian):
 	def __init__(self, worker):
 		self.worker = worker
 
-	def getPolylines(self, persons, v, d, c):
-		return self.worker.getPolylines(persons, v, d)
-
-
-
-
-
+	def getPassOnRight(self, persons, v, d, c):
+		return self.worker.getPassOnRight(persons, v, d)
+	def getPersonalSpace(self, persons, v, d, c):
+		return self.worker.getPersonalSpace(persons, v, d)

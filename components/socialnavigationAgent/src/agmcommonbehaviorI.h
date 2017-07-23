@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2017 by YOUR NAME HERE
+ *    Copyright (C)2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -31,9 +31,9 @@ using namespace RoboCompAGMCommonBehavior;
 class AGMCommonBehaviorI : public virtual RoboCompAGMCommonBehavior::AGMCommonBehavior
 {
 public:
-	AGMCommonBehaviorI(GenericWorker *_worker);
+AGMCommonBehaviorI(GenericWorker *_worker);
 	~AGMCommonBehaviorI();
-	
+
 	bool reloadConfigAgent(const Ice::Current&);
 	bool activateAgent(const ParameterMap  &prs, const Ice::Current&);
 	bool setAgentParameters(const ParameterMap  &prs, const Ice::Current&);

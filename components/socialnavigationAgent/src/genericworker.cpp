@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2017 by YOUR NAME HERE
+ *    Copyright (C)2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -29,8 +29,8 @@ QObject()
 
 {
 	socialnavigationgaussian_proxy = (*(SocialNavigationGaussianPrx*)mprx["SocialNavigationGaussianProxy"]);
-	trajectoryrobot2d_proxy = (*(TrajectoryRobot2DPrx*)mprx["TrajectoryRobot2DProxy"]);
 	omnirobot_proxy = (*(OmniRobotPrx*)mprx["OmniRobotProxy"]);
+	trajectoryrobot2d_proxy = (*(TrajectoryRobot2DPrx*)mprx["TrajectoryRobot2DProxy"]);
 	agmexecutive_proxy = (*(AGMExecutivePrx*)mprx["AGMExecutiveProxy"]);
 	logger_proxy = (*(LoggerPrx*)mprx["LoggerPub"]);
 
@@ -100,7 +100,7 @@ RoboCompPlanning::Action GenericWorker::createAction(std::string s)
 	} while (iss);
 
 	return ret;
-}	
+}
 
 
 bool GenericWorker::activate(const BehaviorParameters &prs)
@@ -114,7 +114,7 @@ bool GenericWorker::activate(const BehaviorParameters &prs)
 	return active;
 }
 
-bool GenericWorker::deactivate() 
+bool GenericWorker::deactivate()
 {
 	printf("Worker::deactivate\n");
 	mutex->lock();

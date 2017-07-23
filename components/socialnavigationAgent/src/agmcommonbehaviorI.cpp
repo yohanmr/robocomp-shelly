@@ -68,8 +68,3 @@ StateStruct AGMCommonBehaviorI::getAgentState(const Ice::Current&)
 	return worker->getAgentState();
 }
 
-
-
-
-
-

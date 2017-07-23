@@ -44,6 +44,7 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	connect(&trajReader, SIGNAL(timeout()), this, SLOT(readTrajState()));
 	//Dibujar gaussiana
 	connect(gaussiana,SIGNAL(clicked()),this, SLOT(gauss()));
+  connect(por,SIGNAL(clicked()),this, SLOT(gausspor()));
 	//Sacar la pose del robot
 	connect(datos,SIGNAL(clicked()),this, SLOT(grabarfichero()));
 	//trajReader.start(1000);
@@ -149,7 +150,7 @@ SNGPolylineSeq SpecificWorker::gauss(bool dibujar)
 	totalpersons=persons;
 
 	secuencia.clear();
-	secuencia = socialnavigationgaussian_proxy->getPolylines(persons, valorprox, dibujar);
+	secuencia = socialnavigationgaussian_proxy-> getPersonalSpace(persons, valorprox, dibujar);
 /*
  *
 
@@ -162,6 +163,33 @@ SNGPolylineSeq SpecificWorker::gauss(bool dibujar)
 
 
 	return secuencia;
+
+}
+SNGPolylineSeq SpecificWorker::gausspor(bool dibujar)
+{
+
+	SNGPersonSeq persons;
+
+	//push back es para incluir a la persona en el vector de personas
+	if (pp1)
+	persons.push_back(person1);
+	if (pp2)
+	persons.push_back(person2);
+	if (pp3)
+	persons.push_back(person3);
+	if (pp4)
+	persons.push_back(person4);
+	if (pp5)
+	persons.push_back(person5);
+	if (pp6)
+	persons.push_back(person6);
+
+	totalpersons=persons;
+
+	secuencia2.clear();
+	secuencia2 = socialnavigationgaussian_proxy-> getPassOnRight(persons, valorprox, dibujar);
+
+	return secuencia2;
 
 }
 
@@ -342,6 +370,11 @@ void SpecificWorker::compute( )
 			person1.x = str2float(edgeRTp1.attributes["tx"])/1000;
 			person1.z = str2float(edgeRTp1.attributes["tz"])/1000;
 			person1.angle = str2float(edgeRTp1.attributes["ry"]);
+      person1.vel=str2float(edgeRTp1.attributes["velocity"]);
+  		if(person1.vel>0)
+      pp1=true;
+      else
+      pp1=false;
 
 			//comprobamos si la persona se ha movido
 			if (first){
@@ -370,7 +403,11 @@ void SpecificWorker::compute( )
 			person2.x=str2float(edgeRTp2.attributes["tx"])/1000;
 			person2.z=str2float(edgeRTp2.attributes["tz"])/1000;
 			person2.angle=str2float(edgeRTp2.attributes["ry"]);
-
+      person2.vel=str2float(edgeRTp2.attributes["velocity"]);
+      if(person2.vel>0)
+      pp2=true;
+      else
+      pp2=false;
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux2=person2;
@@ -397,7 +434,11 @@ void SpecificWorker::compute( )
 			person3.x=str2float(edgeRTp3.attributes["tx"])/1000;
 			person3.z=str2float(edgeRTp3.attributes["tz"])/1000;
 			person3.angle=str2float(edgeRTp3.attributes["ry"]);
-
+      person3.vel=str2float(edgeRTp3.attributes["velocity"]);
+      if(person3.vel>0)
+      pp3=true;
+      else
+      pp3=false;
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux3=person3;
@@ -426,7 +467,11 @@ void SpecificWorker::compute( )
 			person4.x=str2float(edgeRTp4.attributes["tx"])/1000;
 			person4.z=str2float(edgeRTp4.attributes["tz"])/1000;
 			person4.angle=str2float(edgeRTp4.attributes["ry"]);
-
+      person4.vel=str2float(edgeRTp4.attributes["velocity"]);
+      if(person4.vel>0)
+      pp4=true;
+      else
+      pp4=false;
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux4=person4;
@@ -453,7 +498,11 @@ void SpecificWorker::compute( )
 			person5.x=str2float(edgeRTp5.attributes["tx"])/1000;
 			person5.z=str2float(edgeRTp5.attributes["tz"])/1000;
 			person5.angle=str2float(edgeRTp5.attributes["ry"]);
-
+      person5.vel=str2float(edgeRTp5.attributes["velocity"]);
+      if(person5.vel>0)
+      pp5=true;
+      else
+      pp5=false;
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux5=person5;
@@ -479,6 +528,11 @@ void SpecificWorker::compute( )
 			person6.x=str2float(edgeRTp6.attributes["tx"])/1000;
 			person6.z=str2float(edgeRTp6.attributes["tz"])/1000;
 			person6.angle=str2float(edgeRTp6.attributes["ry"]);
+      person6.vel=str2float(edgeRTp6.attributes["velocity"]);
+      if(person6.vel>0)
+      pp6=true;
+      else
+      pp6=false;
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux6=person6;
@@ -557,7 +611,7 @@ void SpecificWorker::compute( )
 
 		  qDebug()<<"llamamos al trajectory";
 		 SNGPolylineSeq secuencia=gauss(false);
-
+     //SNGPolylineSeq secuencia2=gausspor(false);
 		  RoboCompTrajectoryRobot2D::PolyLineList lista;
 
 		  for(auto s: secuencia)

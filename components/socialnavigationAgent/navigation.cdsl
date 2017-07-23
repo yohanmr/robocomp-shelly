@@ -1,7 +1,7 @@
-import "/robocomp/interfaces/IDSLs/TrajectoryRobot2D.idsl";
-import "/robocomp/interfaces/IDSLs/Logger.idsl";
-import "/robocomp/interfaces/IDSLs/OmniRobot.idsl";
-import "/robocomp/interfaces/IDSLs/SocialNavigationGaussian.idsl";
+import "TrajectoryRobot2D.idsl";
+import "Logger.idsl";
+import "OmniRobot.idsl";
+import "SocialNavigationGaussian.idsl";
 
 Component socialnavigationAgent
 {

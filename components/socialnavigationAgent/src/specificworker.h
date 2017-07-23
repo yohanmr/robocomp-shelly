@@ -46,17 +46,17 @@ class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
 public:
-  
-    
+
+
 	SpecificWorker(MapPrx& mprx);
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
-	
+
 //bool para indicar si se ha movido la persona, lo utilizare para imprimir la coordenada de la persona cada vez que se mueva
 	bool cambiopos=false;
-	
-	SNGPolylineSeq secuencia;
-	
+
+	SNGPolylineSeq secuencia,secuencia2;
+
 	//ESTRUCTURA PERSONA FORMADA POR ANGULO, POS X,POS Z
 	SNGPersonSeq totalpersons; //este es para leer el fichero
 	SNGPerson person1;
@@ -75,7 +75,7 @@ public:
 	SNGPerson personaux6;
 	//bool para saber si se ha movido alguna persona
 	bool movperson = false;
-	
+
 	//PARA ALMACENAR EL SIMBOLO DE LA PERSONA AL LEERLA DEL MUNDO
 	int32_t personSymbolIdp1;
 	int32_t personSymbolIdp2;
@@ -84,7 +84,7 @@ public:
 	int32_t personSymbolIdp5;
 	int32_t personSymbolIdp6;
 	int32_t robotSymbolId;
-	
+
 	//BOOL PARA COMPROBAR SI LA PERSONA ESTA EN EL MUNDO
 	bool p1=false;
 	bool p2=false;
@@ -92,6 +92,13 @@ public:
 	bool p4=false;
 	bool p5=false;
 	bool p6=false;
+  bool pp1=false;
+	bool pp2=false;
+	bool pp3=false;
+	bool pp4=false;
+	bool pp5=false;
+	bool pp6=false;
+
 
 	//PARA GUARDAR LOS DATOS EN UN ARCHIVO
 
@@ -101,20 +108,20 @@ public:
 	};
 	Punto punto;
 	vector <Punto> poserobot;
-	
+
 	//PARA LEER EL VALOR DEL SLIDER
 	int valorprox = 0;
 
-	
+
 	//PARA GUARDAR LA DISTANCIA RECORRIDA
 	float totaldist=0;
-	
+
 	//PARA COMPROBAR SI DOS PERSONAS ESTAN HABLANDO. ya no se usa
 	bool conversation = false;
 	bool checkconversation();
 
-	
-	
+
+
 	//////////////
 	/// SERVANTS
 	//////////////
@@ -126,7 +133,7 @@ public:
 	void  killAgent();
 	Ice::Int uptimeAgent();
 	bool reloadConfigAgent();
-	
+
 	void  structuralChange(const RoboCompAGMWorldModel::World & modification);
 	void  symbolUpdated(const RoboCompAGMWorldModel::Node& modification);
 	void  symbolsUpdated(const RoboCompAGMWorldModel::NodeSequence & modification);
@@ -139,6 +146,7 @@ public slots:
  	void compute();
 	void readTrajState();
 	SNGPolylineSeq gauss(bool dibujar=true);
+	SNGPolylineSeq gausspor(bool dibujar=true);
 	void cambiarvalor(int valor);
 	void grabarfichero();
 
@@ -148,9 +156,9 @@ private:
 	void sendModificationProposal(AGMModel::SPtr &worldModel, AGMModel::SPtr &newModel,std::string m);
 	void includeMovementInRobotSymbol(AGMModelSymbol::SPtr robot);
 
-	
 
-	
+
+
 	void go(float x, float z, float alpha=0, bool rot=false, float xRef=0, float zRef=0, float threshold=200);
 	void stop();
 
@@ -165,15 +173,15 @@ private:
 	InnerModel *innerModel;
 	bool haveTarget;
 	QTimer trajReader;
-	
-		
+
+
 
 	RoboCompTrajectoryRobot2D::NavState planningState;
 
 
 	// Target info
 	RoboCompTrajectoryRobot2D::TargetPose currentTarget;
-	
+
 	void manageReachedPose();
 	float distanceToNode(std::string reference_name, AGMModel::SPtr model, AGMModelSymbol::SPtr object);
 private:
@@ -192,9 +200,9 @@ private:
 //CHECK
 	//void updateRobotsCognitiveLocation();
 //	std::map<int32_t, QPolygonF> roomsPolygons;
-//	std::map<int32_t, QPolygonF> extractPolygonsFromModel(AGMModel::SPtr &worldModel);	
+//	std::map<int32_t, QPolygonF> extractPolygonsFromModel(AGMModel::SPtr &worldModel);
 //	RoboCompOmniRobot::TBaseState bState;
-	
+
 };
 
 
@@ -241,5 +249,3 @@ private:
 };
 
 #endif
-
-

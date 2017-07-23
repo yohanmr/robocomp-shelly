@@ -1,5 +1,5 @@
 /*
- *    Copyright (C) 2017 by YOUR NAME HERE
+ *    Copyright (C)2017 by YOUR NAME HERE
  *
  *    This file is part of RoboComp
  *
@@ -53,7 +53,7 @@ using namespace RoboCompLogger;
 using namespace RoboCompAGMCommonBehavior;
 
 
-struct BehaviorParameters 
+struct BehaviorParameters
 {
 	RoboCompPlanning::Action action;
 	std::vector< std::vector <std::string> > plan;
@@ -61,7 +61,7 @@ struct BehaviorParameters
 
 
 
-class GenericWorker : 
+class GenericWorker :
 #ifdef USE_QTGUI
 public QWidget, public Ui_guiDlg
 #else
@@ -74,17 +74,17 @@ public:
 	virtual ~GenericWorker();
 	virtual void killYourSelf();
 	virtual void setPeriod(int p);
-	
+
 	virtual bool setParams(RoboCompCommonBehavior::ParameterList params) = 0;
 	QMutex *mutex;
 	bool activate(const BehaviorParameters& parameters);
 	bool deactivate();
 	bool isActive() { return active; }
-	
 
-	LoggerPrx logger_proxy;
-	OmniRobotPrx omnirobot_proxy;
+
 	SocialNavigationGaussianPrx socialnavigationgaussian_proxy;
+	OmniRobotPrx omnirobot_proxy;
+	LoggerPrx logger_proxy;
 	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 	AGMExecutivePrx agmexecutive_proxy;
 

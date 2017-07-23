@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 by YOUR NAME HERE
+# Copyright (C) 2017 by YOUR NAME HERE
 #
 #    This file is part of RoboComp
 #
@@ -46,8 +46,8 @@ class GenericWorker(QtCore.QObject):
 		super(GenericWorker, self).__init__()
 
 
-		
-		
+
+
 		self.mutex = QtCore.QMutex(QtCore.QMutex.Recursive)
 		self.Period = 30
 		self.timer = QtCore.QTimer(self)

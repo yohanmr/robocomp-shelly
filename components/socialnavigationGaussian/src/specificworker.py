@@ -104,17 +104,18 @@ class Person(object):
     polyline = []
     xdot = 0
     ydot = 0
+    vel=0
 
     _radius = 0.30
     """ Public Methods """
 
-    def __init__(self, x=0, y=0, th=0):
+    def __init__(self, x=0, y=0, th=0,vel=0):
         self.x = x
         self.y = y
         self.th = th
+        self.vel = vel
 
-
-    def draw(self, v, drawPersonalSpace=False):
+    def draw(self, v,sigma_h,sigma_r,sigma_s,rot, drawPersonalSpace=False):
         #numero de curvas de contorno
         nc = 10
         if v <= 20:
@@ -136,7 +137,7 @@ class Person(object):
         X, Y = np.meshgrid(x, y)
         # plt.plot(X, Y, '*')
 
-        Z = self._calculatePersonalSpace(X, Y)
+        Z = self._calculatePersonalSpace(X, Y,sigma_h,sigma_r,sigma_s,rot)
 
         if (drawPersonalSpace):
             # print(Z)
@@ -184,20 +185,15 @@ class Person(object):
 
     """ Private Methods """
 
-    def _calculatePersonalSpace(self, x, y):
-        """""
+    def _calculatePersonalSpace(self, x, y,sigma_h,sigma_r,sigma_s,rot):
+        """"",sigma_h
         sigma_h = 2.0
         sigma_r = 1.0
         sigma_s = 4/3
         """
         ##he cambiado el valor de las sigmas porque la gaussiana que dibujaba con las anteriores era muy grande
 
-        sigma_h = 4
-        sigma_r = 2
-        sigma_s = 2*4/3
 
-
-        rot = pi/2 - self.th
 
 
         alpha = np.arctan2(y - self.y, x - self.x) - rot - pi / 2
@@ -252,7 +248,7 @@ class SpecificWorker(GenericWorker):
     #
     # getPolyline
     #
-    def getPolylines(self, persons, v, dibujar):
+    def getPersonalSpace(self, persons, v, dibujar):
 
         plt.close("all")
        ##DESCOMENTAR EL FIGUREEE
@@ -267,7 +263,7 @@ class SpecificWorker(GenericWorker):
 
 
         ##Limites de la representacion
-        
+
         lx_inf = -6
         lx_sup = 8
         ly_inf = -6
@@ -291,7 +287,7 @@ class SpecificWorker(GenericWorker):
         for p in persons:
             pn = Person(p.x, p.z, p.angle)
             #print('Pose x', pn.x, 'Pose z', pn.y, 'Rotacion', pn.th)
-            pn.draw(v, drawPersonalSpace=dibujar)
+            pn.draw(v,4,2,2*4/3,pi/2 - pn.th, drawPersonalSpace=dibujar)
             #normals.append(Normal(mu=[[pn.x], [pn.y]], sigma=[-pn.th - pi/2, 2.0, 2.0, 2.0], elliptical=True))
             normals.append(Normal(mu=[[pn.x], [pn.y]], sigma=[-pn.th - pi/2, 4, 2, 2*4/3], elliptical=True))
         #print ("numero de gaussianas",len(normals))
@@ -345,5 +341,56 @@ class SpecificWorker(GenericWorker):
             plt.show()
 
         """
+        plt.show()
+        return polylines
+
+    def getPassOnRight(self, persons, v, dibujar):
+
+        plt.close("all")
+
+
+        lx_inf = -6
+        lx_sup = 8
+        ly_inf = -6
+        ly_sup = 8
+
+        normals = []
+
+        for p in persons:
+            pn = Person(p.x, p.z, p.angle, p.vel)
+
+            pn.draw(v,(50/((7*pn.vel/50)+43)*4), (50/((7*pn.vel/50)+43)*4)/2, 2*(50/((7*pn.vel/50)+43)*4)/3,pi/2-pn.th, drawPersonalSpace=dibujar)
+            pn.draw(v,4, 1.5, 10/3, pi - pn.th, drawPersonalSpace=dibujar)
+
+            normals.append(Normal(mu=[[pn.x], [pn.y]], sigma=[-pn.th - pi/2, (50/((7*pn.vel/50)+43)*4), (50/((7*pn.vel/50)+43)*4)/2, 2*(50/((7*pn.vel/50)+43)*4)/3], elliptical=True))
+            normals.append(Normal(mu=[[pn.x], [pn.y]], sigma=[-pn.th , 4, 1.5, 10/3], elliptical=True))
+
+
+        h = 0.4
+        resolution = 0.1
+        limits = [[lx_inf, lx_sup], [ly_inf, ly_sup]]
+        _, z = Normal.makeGrid(normals, h, 2, limits=limits, resolution=resolution)
+        grid = GM.filterEdges(z, h)
+
+        if (dibujar):
+            plt.figure()
+            plt.imshow(grid, extent=[lx_inf, lx_sup, ly_inf, ly_sup], shape=grid.shape, interpolation='none', aspect='equal', origin='lower', cmap='Greys', vmin=0, vmax=2)
+            plt.xlabel('X')
+            plt.ylabel('Y')
+            plt.axis('equal')
+
+        np.savetxt('log.txt', grid, fmt='%i')
+
+        polylines = []
+        totalpuntosorden = getPolyline(grid, resolution, lx_inf, ly_inf)
+
+        for pol in totalpuntosorden:
+            polyline = []
+            for pnt in pol:
+                punto = SNGPoint2D()
+                punto.x = pnt[0]
+                punto.z = pnt[1]
+                polyline.append(punto)
+            polylines.append(polyline)
         plt.show()
         return polylines
