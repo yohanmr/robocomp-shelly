@@ -372,10 +372,16 @@ void SpecificWorker::compute( )
 			person1.angle = str2float(edgeRTp1.attributes["ry"]);
       person1.vel=str2float(edgeRTp1.attributes["velocity"]);
   		if(person1.vel>0)
-      pp1=true;
-      else
-      pp1=false;
+      {
+        pp1=true;
+        p1=false;
+      }
 
+      else
+      {
+        pp1=false;
+        p1=true;
+      }
 			//comprobamos si la persona se ha movido
 			if (first){
 				personaux1=person1;
@@ -405,9 +411,15 @@ void SpecificWorker::compute( )
 			person2.angle=str2float(edgeRTp2.attributes["ry"]);
       person2.vel=str2float(edgeRTp2.attributes["velocity"]);
       if(person2.vel>0)
-      pp2=true;
+      {
+        p2=false;
+        pp2=true;
+      }
       else
-      pp2=false;
+      {
+        p2=true;
+        pp2=false;
+      }
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux2=person2;
@@ -436,9 +448,15 @@ void SpecificWorker::compute( )
 			person3.angle=str2float(edgeRTp3.attributes["ry"]);
       person3.vel=str2float(edgeRTp3.attributes["velocity"]);
       if(person3.vel>0)
-      pp3=true;
+      {
+        p3=false;
+        pp3=true;
+      }
       else
-      pp3=false;
+      {
+        pp3=false;
+        p3=true;
+      }
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux3=person3;
@@ -469,9 +487,15 @@ void SpecificWorker::compute( )
 			person4.angle=str2float(edgeRTp4.attributes["ry"]);
       person4.vel=str2float(edgeRTp4.attributes["velocity"]);
       if(person4.vel>0)
-      pp4=true;
+      {
+        pp4=true;
+        p4=false;
+      }
       else
-      pp4=false;
+      {
+        p4=true;
+        pp4=false;
+      }
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux4=person4;
@@ -500,9 +524,15 @@ void SpecificWorker::compute( )
 			person5.angle=str2float(edgeRTp5.attributes["ry"]);
       person5.vel=str2float(edgeRTp5.attributes["velocity"]);
       if(person5.vel>0)
-      pp5=true;
+      {
+        p5=false;
+        pp5=true;
+      }
       else
-      pp5=false;
+      {
+        p5=true;
+        pp5=false;
+      }
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux5=person5;
@@ -530,9 +560,15 @@ void SpecificWorker::compute( )
 			person6.angle=str2float(edgeRTp6.attributes["ry"]);
       person6.vel=str2float(edgeRTp6.attributes["velocity"]);
       if(person6.vel>0)
-      pp6=true;
+      {
+        p6=false;
+        pp6=true;
+      }
       else
-      pp6=false;
+      {
+        p6=true;
+        pp6=false;
+      }
 			//comprobamos si la persona se ha movido
 				if (first){
 				personaux6=person6;
@@ -611,7 +647,7 @@ void SpecificWorker::compute( )
 
 		  qDebug()<<"llamamos al trajectory";
 		 SNGPolylineSeq secuencia=gauss(false);
-     //SNGPolylineSeq secuencia2=gausspor(false);
+     SNGPolylineSeq secuencia2=gausspor(false);
 		  RoboCompTrajectoryRobot2D::PolyLineList lista;
 
 		  for(auto s: secuencia)
@@ -628,6 +664,22 @@ void SpecificWorker::compute( )
 		    lista.push_back(poly);
 		  }
 		  qDebug()<<"llamamos al SetHumanSpace";
+
+		  trajectoryrobot2d_proxy->setHumanSpace(lista);
+      for(auto s: secuencia2)
+		  {
+		    RoboCompTrajectoryRobot2D::PolyLine poly;
+
+		    for(auto p: s)
+
+		    {
+		      RoboCompTrajectoryRobot2D::PointL punto = {p.x, p.z};
+		      poly.push_back(punto);
+
+		    }
+		    lista.push_back(poly);
+		  }
+		  qDebug()<<"llamamos al SetPassOnRight";
 
 		  trajectoryrobot2d_proxy->setHumanSpace(lista);
 		}

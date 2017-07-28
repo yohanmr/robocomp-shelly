@@ -489,12 +489,14 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 		if (autocounter[humannum-1]==0)
 			{
 				autocounter[humannum-1]=1;
-				inix[humannum-1]=pose.x;
-				iniz[humannum-1]=pose.z;
-				xpath[humannum-1]=pose.x;
-				zpath[humannum-1]=pose.z;
+				AGMModelSymbol::SPtr personParent = worldModel->getParentByLink(personSymbolId[humannum-1], "RT");
+				AGMModelEdge &edgeRT  = worldModel->getEdgeByIdentifiers(personParent->identifier, personSymbolId[humannum-1], "RT");
+				inix[humannum-1]=str2int(edgeRT.attributes["tx"]);
+				iniz[humannum-1]=str2int(edgeRT.attributes["tz"]);
+				xpath[humannum-1]=str2int(edgeRT.attributes["tx"]);
+				zpath[humannum-1]=str2int(edgeRT.attributes["tz"]);
 				qDebug()<<"AutoPilot ON";
-				qDebug()<<"Initail x:"<<inix[humannum-1]<<" Inital z:"<<iniz[humannum-1];
+				qDebug()<<"Initial x:"<<inix[humannum-1]<<" Initial z:"<<iniz[humannum-1];
 
 			}
 		else
