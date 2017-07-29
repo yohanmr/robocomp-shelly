@@ -644,28 +644,37 @@ void SpecificWorker::compute( )
 	qDebug ("se ha movido alguna pesona, se envia la polilinea");
 		try
 		{
+      RoboCompTrajectoryRobot2D::PolyLineList lista;
 
-		  qDebug()<<"llamamos al trajectory";
-		 SNGPolylineSeq secuencia=gauss(false);
-     SNGPolylineSeq secuencia2=gausspor(false);
-		  RoboCompTrajectoryRobot2D::PolyLineList lista;
+		 qDebug()<<"llamamos al trajectory";
+     if(p1==true||p2==true||p3==true||p4==true||p5==true||p6==true)
+     {
+  		 SNGPolylineSeq secuencia=gauss(false);
 
-		  for(auto s: secuencia)
-		  {
-		    RoboCompTrajectoryRobot2D::PolyLine poly;
 
-		    for(auto p: s)
 
-		    {
-		      RoboCompTrajectoryRobot2D::PointL punto = {p.x, p.z};
-		      poly.push_back(punto);
+  		  for(auto s: secuencia)
+  		  {
+  		    RoboCompTrajectoryRobot2D::PolyLine poly;
 
-		    }
-		    lista.push_back(poly);
-		  }
-		  qDebug()<<"llamamos al SetHumanSpace";
+  		    for(auto p: s)
 
-		  trajectoryrobot2d_proxy->setHumanSpace(lista);
+  		    {
+  		      RoboCompTrajectoryRobot2D::PointL punto = {p.x, p.z};
+  		      poly.push_back(punto);
+
+  		    }
+  		    lista.push_back(poly);
+  		  }
+        trajectoryrobot2d_proxy->setHumanSpace(lista);
+      }
+
+
+
+		 if(pp1==true||pp2==true||pp3==true||pp4==true||pp5==true||pp6==true)
+     {
+      SNGPolylineSeq secuencia2=gausspor(false);
+      qDebug()<<"llamamos al SetHumanSpace";
       for(auto s: secuencia2)
 		  {
 		    RoboCompTrajectoryRobot2D::PolyLine poly;
@@ -683,6 +692,7 @@ void SpecificWorker::compute( )
 
 		  trajectoryrobot2d_proxy->setHumanSpace(lista);
 		}
+    }
 		catch( const Ice::Exception &e)
 		{ std::cout << e << std::endl;}
 
